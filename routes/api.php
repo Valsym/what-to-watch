@@ -22,34 +22,47 @@ use App\Http\Controllers\PromoController;
 |
 */
 
-
+//Route::post('/login', function() {
+//    $t = 4;
+//    $t++;
+//
+//    return view('welcome', [AuthController::class, 'login']);
+//});
 
 Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
 Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
-Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
+Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
 Route::get('/user/{user}', [UserController::class, 'show'])->name('user.show');
-Route::patch('/user', [UserController::class, 'update'])->name('user.update');
+Route::middleware('auth:sanctum')->patch('/user', [UserController::class, 'update'])->name('user.update');
 
 Route::get('/films/{film}/similar', [FilmController::class, 'similar'])->name('film.similar');
 
-Route::get('/films', [FilmController::class, 'index'])->name('film.index');
-Route::post('/films', [FilmController::class, 'store'])->name('film.store');
+//Route::get('/films', [FilmController::class, 'index'])->name('film.index');
+Route::middleware('auth:sanctum')->post('/films', [FilmController::class, 'store'])->name('film.store');
 Route::get('/films/{film}', [FilmController::class, 'show'])->name('film.show');
-Route::patch('/films/{film}', [FilmController::class, 'update'])->name('film.update');
+Route::middleware('auth:sanctum')->patch('/films/{film}', [FilmController::class, 'update'])->name('film.update');
 
 Route::get('/genres', [GenreController::class, 'index'])->name('genre.index');
-Route::patch('/genres/{genre}', [GenreController::class, 'update'])->name('genre.update');
+Route::middleware('auth:sanctum')->patch('/genres/{genre}', [GenreController::class, 'update'])->name('genre.update');
 
 Route::get('/favorite', [FavoriteController::class, 'index'])->name('favorite.index');
-Route::post('/films/{film}/favorite', [FavoriteController::class, 'store'])->name('favorite.store');
-Route::delete('/films/{film}/favorite', [FavoriteController::class, 'destroy'])->name('favorite.destroy');
+Route::middleware('auth:sanctum')->post('/films/{film}/favorite', [FavoriteController::class, 'store'])->name('favorite.store');
+Route::middleware('auth:sanctum')->delete('/films/{film}/favorite', [FavoriteController::class, 'destroy'])->name('favorite.destroy');
 Route::get ('/favorite/{film}/status', [FavoriteController::class, 'status'])->name('favorite.status');
 
 Route::get('films/{film}/comments', [CommentController::class, 'index'])->name('comments.index');
-Route::post('films/{film}/comments', [CommentController::class, 'store'])->name('comments.store');
-Route::patch('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
-Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('films/{film}/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::patch('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+});
 
-Route::post('/promo', [PromoController::class, 'store'])->name('promo.store');
+//Route::post('/promo', [PromoController::class, 'store'])->name('promo.store');
 Route::get('/promo/{film}', [FilmController::class, 'show'])->name('promo.show');
+Route::prefix('/promo')->group(function () {
+//    Route::get('/', [FilmController::class, 'showPromo'])->name('promo.show');
+    Route::post('/promo/{id}', [FilmController::class, 'store'])->middleware('auth:sanctum')->name(
+        'promo.create'
+    );
+});
