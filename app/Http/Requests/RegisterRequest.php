@@ -31,7 +31,6 @@ class RegisterRequest extends FormRequest
                 'string',
                 'email',
                 'max:255',
-//                self::getUniqRule(),
                 $this->getUniqRule(),
             ],
             'password' => [
@@ -47,21 +46,17 @@ class RegisterRequest extends FormRequest
 
     private function getUniqRule()
     {
-        $t = 99;
-        $t++;
         $rule = Rule::unique(User::class);
 
-//        if (self::isMethod('PATCH') && Auth::check()) {
-//            return $rule->ignore(Auth::user());
-//        }
+        if ($this->isMethod('PATCH') && Auth::check()) {
+            return $rule->ignore(Auth::user());
+        }
 
         return $rule;
     }
 
-    private static function getPasswordRequiredRule() : string
+    private function getPasswordRequiredRule() : string
     {
-        $t = 9;
-        $t++;
-        return self::isMethod('PATCH') ? 'sometimes' : 'required';
+        return $this->isMethod('PATCH') ? 'sometimes' : 'required';
     }
 }

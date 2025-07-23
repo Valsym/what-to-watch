@@ -19,45 +19,14 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class AuthController extends Controller
 {
-//    public function __construct(protected AuthService $authService)
-//    {
-//
-//    }
     /**
      * Регистрация юзера
      *
-     * @return \Illuminate\Http\Response
+     * @param RegisterRequest $request
+     * @return Success
      */
-    public function register(RegisterRequest $request)
+    public function register(RegisterRequest $request): Success
     {
-        $params = $request->safe()->except('file');
-        $user = User::create($params);
-        $token = $user->createToken('auth_token');
-
-        return $this->success([
-            'user' => $user,
-            'token' => $token->plainTextToken,
-        ], 201);
-    }
-    public function register1(RegisterRequest $request): Success
-    {
-        $params = $request->safe()->except('file');
-
-        $result = $this->authService->registerUser($params);
-
-        return $this->success($result, 201);
-    }
-
-    public function register3(FormRequest $request): Success
-    {
-        $rules = RegisterRequest::rules();
-
-        $validator = Validator::make($request->all(), $rules);
-        if ($validator->fails()) {
-            abort(401, 'register.failed')->withErrors($validator);//trans('auth.failed'))
-        }
-
-//        $params = $request->safe(['email', 'password']);
         $params = $request->safe()->except('file');
         $user = User::create($params);
         $token = $user->createToken('auth_token');
@@ -69,103 +38,10 @@ class AuthController extends Controller
     }
 
     /**
-     * login
-     *
-     * @return \Illuminate\Http\Response
+     * @param LoginRequest $request
+     * @return Success
      */
-    public function login000(Request $request)
-    {
-        $rule = [
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ];
-
-        $validator = Validator::make($request->all(), $rule);
-
-        if ($validator->fails()) {
-            abort(401, 'auth.failed')->withErrors($validator);//trans('auth.failed'))
-//            return redirect('post/create')
-//                ->withErrors($validator);
-                //->withInput();
-        }
-
-
-
-//        $validatedData = $request->validate($rule);
-        $t = 3;
-        $pars = $request->all();
-////        $user = User::where('email', $pars['email']);
-//        $db_pass = DB::table('users')->where('email', $pars['email'])->value('password');
-//        if (Hash::check('passwordToCheck', $user->password)) {
-//            // Success
-//        }
-
-        $email = $pars['email'];
-        //$user = User::find($email);
-        $user = User::where('email', $email)->first();
-        $id = $user->id ?? 'no';
-        $hasher = app('hash');
-        if ($id && $hasher->check($pars['password'], $user->password)) {
-            // Success
-            $t = 1;
-//            $token = Auth::user()->createToken('auth-token');
-            $token = $user->createToken('auth_token');
-
-            return $this->success(['token' => $token->plainTextToken]);
-        }
-
-        $t = 12;
-        $t++;
-        return new Fail(
-            message: 'Переданные данные не корректны',
-            data: [
-                'email' => ['Неверный email или пароль.'],
-                'password' => ['Неверный email или пароль.']
-            ],
-            code: Response::HTTP_UNAUTHORIZED
-        );
-
-
-        $t = 12;
-        $t++;
-        $token = Auth::user()->createToken('auth-token');
-
-        return $this->success(['token' => $token->plainTextToken]);
-    }
-    public function login2(Request $request): Success|Fail
-    {
-
-        try {
-            $token = $this->authService->loginUser($request->validated(
-                [
-                    'email' => ['required', 'email'],
-                    'password' => ['required', 'string'],
-                ]
-            ));
-            $t = 3;
-            $t++;
-
-
-            return $this->success(['token' => $token]);
-//            $token = Auth::user()->createToken('auth-token');
-//
-//            return $this->success(['token' => $token->plainTextToken]);
-        } catch (UnauthorizedHttpException $e) {
-            $t = 5;
-            $t++;
-            abort(401, trans('auth.failed'));
-            return new Fail(
-                message: '2Переданные данные не корректны '. $e,
-                data: [
-                    'email' => ['Неверный email или пароль.'],
-                    'password' => ['Неверный email или пароль.']
-                ],
-                code: Response::HTTP_UNAUTHORIZED
-            );
-        }
-    }
-
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request): Success
     {
         if (!Auth::attempt($request->validated())) {
             abort(401, trans('login.failed'));
@@ -179,11 +55,9 @@ class AuthController extends Controller
 
 
     /**
-     * logout
-     *
-     * @return \Illuminate\Http\Response
+     * @return Success
      */
-    public function logout()
+    public function logout(): Success
     {
         Auth::user()->tokens()->delete();
 
