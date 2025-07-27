@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -34,6 +37,8 @@ class Comment extends Model
 {
     use HasFactory;
 
+    public const string DEFAULT_AUTHOR_NAME = "Гость";
+
     protected $visible = [
         'id',
         'text',
@@ -54,6 +59,14 @@ class Comment extends Model
 
     public function getAuthorAttribute()
     {
-        return $this->user->name ?? 'Гость';
+        return $this->user->name ?? self::DEFAULT_AUTHOR_NAME;
+    }
+
+    /**
+     * Ответы на этот комментарий (дочерние)
+     */
+    public function replies(): HasMany
+    {
+        return $this->hasMany(Comment::class, 'parent_id');
     }
 }

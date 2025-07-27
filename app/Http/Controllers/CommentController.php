@@ -2,7 +2,21 @@
 
 namespace App\Http\Controllers;
 
+
+use App\Models\Comment;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
+use App\Providers\AuthServiceProvider;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCommentRequest;
+use App\Http\Requests\UpdateCommentRequest;
+use App\Http\Responses\Success;
+use App\Http\Responses\Fail;
+use App\Services\CommentService;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Gate;
 
 class CommentController extends Controller
 {
@@ -48,6 +62,55 @@ class CommentController extends Controller
      */
     public function destroy($id)
     {
-        return $this->success([]);
+        $user = Auth::user();//User::find($id);
+        $comment = Comment::find($id)->first();
+
+        if (Gate::allows('comment-delete', $comment)
+            && !$comment->replies()->exists()){ // и нет цепочки ком ментариев ниже
+            // Юзер авторизован для выполнения этого действия
+
+            if (Comment::destroy($id)) {
+                return $this->success(null, 204);
+            } else {
+                return new Fail(
+                    message: "Не удалось удалить комментарий user_id=$user->id coment_id=$id",
+                    data: [
+                        'id' => ['Неверный id.'],
+                    ],
+                    code: Response::HTTP_CONFLICT
+                );
+            }
+        } else if ($comment->replies()->exists()) {
+            throw new AuthorizationException('Нельзя удалить комментарий с ответами');
+        } else {
+            // Юзер не имеет доступа к удалению комментария
+            abort(403, 'Комментарий может удалить только его автор или Модератор');
+        }
+
+        // Либо так (без Гейта)
+//        $comment = Comment::where('id', $id)->first();
+//        $deletedRows = DB::table('comments')->where('id', $id)->delete();
+        if($user->isModerator() || $user->id === $comment->user_id) {
+
+            if (Comment::destroy($id)) {
+                return $this->success([]);
+            } else {
+                return new Fail(
+                    message: "Не удалось удалить комментарий user_id=$user->id coment_id=$id",
+                    data: [
+                        'id' => ['Неверный id.'],
+                    ],
+                    code: Response::HTTP_CONFLICT
+                );
+            }
+        }
+
+        return new Fail(
+            message: "Комментарий может удалить только его автор или Модератор",
+            data: [],
+            code: Response::HTTP_BAD_REQUEST
+        );
+
+
     }
 }

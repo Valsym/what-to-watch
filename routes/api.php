@@ -55,8 +55,25 @@ Route::get('films/{film}/comments', [CommentController::class, 'index'])->name('
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('films/{film}/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::patch('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 });
+Route::middleware('auth:sanctum')->delete('/comments/{comment}', [CommentController::class, 'destroy'])
+    ->name('comments.destroy');//->middleware('can:comment-delete');
+;
+//Route::middleware(['auth:sanctum', 'moderator'])->delete('/comments/{comment}', [CommentController::class, 'destroy'])
+//    ->name('comments.destroy');
+// Комментарии
+//Route::prefix('/comments')->group(function () {
+//    Route::get('/{id}', [CommentController::class, 'index'])->name('comments.index');
+//    Route::middleware('auth:sanctum')->group(function () {
+//        Route::post('/{id}', [CommentController::class, 'store'])->name('comments.store');
+//        Route::patch('/{comment}', [CommentController::class, 'update'])->middleware(
+//            'can:update-comment,comment'
+//        )->name('comments.update');
+//        Route::delete('/{id}', [CommentController::class, 'destroy'])->middleware(
+//            'can:delete-comment,comment'
+//        )->name('comments.destroy');
+//    });
+//});
 
 //Route::post('/promo', [PromoController::class, 'store'])->name('promo.store');
 Route::get('/promo/{film}', [FilmController::class, 'show'])->name('promo.show');
