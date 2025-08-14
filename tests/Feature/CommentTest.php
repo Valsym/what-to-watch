@@ -57,4 +57,35 @@ class CommentTest extends TestCase
             'rating' => $comment->rating,
         ]);
     }
+
+    /**
+     * Получение списка комментариев.
+     */
+    public function testGetFilmCommentsRoute()
+    {
+        $count = random_int(2, 10);
+
+        $film = Film::factory()
+            ->has(Comment::factory($count))
+            ->create();
+
+        $response = $this->getJson(route('comments.index', $film));
+
+        $response->assertStatus(200);
+        $response->assertJsonCount($count, 'data');
+        $response->assertJsonFragment(['text' => $film->comments->first()->text]);
+    }
+
+    /**
+     * Попытка редактирования комментария не аутентифицированным пользователем.
+     */
+    public function testUpdateCommentByGuest()
+    {
+        $comment = Comment::factory()->create();
+
+        $response = $this->patchJson(route('comments.update', $comment), []);
+
+        $response->assertStatus(401);
+    }
+
 }
