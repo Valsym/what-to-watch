@@ -61,7 +61,7 @@ class CommentTest extends TestCase
     /**
      * Получение списка комментариев.
      */
-    public function testGetFilmCommentsRoute()
+    public function testGetFilmCommentsRoute() // тест не проходит
     {
         $count = random_int(2, 10);
 
@@ -91,7 +91,7 @@ class CommentTest extends TestCase
     /**
      * Попытка редактирования комментария пользователем не автором комментария.
      */
-    public function testUpdateCommentByCommonUser()
+    public function testUpdateCommentByCommonUser() // тест не проходит
     {
         Sanctum::actingAs(User::factory()->create());
 
@@ -130,6 +130,55 @@ class CommentTest extends TestCase
 //            'text' => $comment->text,
 //            'rating' => $comment->rate,
 //        ]);
+    }
+
+    /**
+     * Успешное редактирование комментария автором.
+     */
+    public function testUpdateCommentByAthor()
+    {
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $comment = Comment::factory()->for($user)->create();
+
+        $data = [
+            'text' => 'some text some text some text some text  some text  some text',
+        ];
+
+        $response = $this->patchJson(route('comments.update', $comment), $data);
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment($data);
+    }
+
+    /**
+     * Редактирование своего комментария
+     */
+    public function testUserCanEditCommentsForFilm(): void
+    {
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $comment = Comment::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $newText = 'Test comment Test comment Test comment Test comment Test comment';
+
+        $response = $this->patchJson(route('comments.update', [
+            'comment' => $comment->id]), [
+            'text' => $newText,
+            'rating' => 5,
+        ]);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('comments', [
+            'id' => $comment->id,
+            'user_id' => $user->id,
+            'text' => $newText,
+            'rating' => 5,
+        ]);
     }
 
 }
