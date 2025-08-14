@@ -18,11 +18,21 @@ class CommentTest extends TestCase
     /**
      * A basic feature test example.
      */
-    public function test_example(): void
-    {
-        $response = $this->get('/');
+//    public function test_example(): void
+//    {
+//        $response = $this->get('/');
+//
+//        $response->assertStatus(200);
+//    }
 
-        $response->assertStatus(200);
+    /**
+     * Попытка добавления комментария гостем.
+     */
+    public function testAddFilmCommentByGuest()
+    {
+        $response = $this->postJson(route('comments.store', 1));
+
+        $response->assertStatus(401);
     }
 
     /**
