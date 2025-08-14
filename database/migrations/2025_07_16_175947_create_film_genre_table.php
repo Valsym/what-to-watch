@@ -11,13 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('film_genre');
+        /*Schema::dropIfExists('film_genre');
         Schema::create('film_genre', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(\App\Models\Film::class)->constrained();
-            $table->foreignIdFor(\App\Models\Genre::class)->constrained();
+//            $table->foreignIdFor(\App\Models\Film::class)->constrained();
+//            $table->foreignIdFor(\App\Models\Genre::class)->constrained();
+            $table->foreignId('film_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('genre_id')->constrained()->cascadeOnDelete();
+            $table->primary(['film_id', 'genre_id']);
             $table->timestampsTz();
-        });
+        });*/
     }
 
     /**

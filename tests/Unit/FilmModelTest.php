@@ -3,12 +3,15 @@
 namespace Tests\Unit;
 
 //use PHPUnit\Framework\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use App\Models\Comment;
 use App\Models\Film;
 
 class FilmModelTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * A basic unit test example.
      */

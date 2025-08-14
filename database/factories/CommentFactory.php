@@ -19,7 +19,8 @@ class CommentFactory extends Factory
     public function definition(): array
     {
         return [
-            'text' => fake()->sentence(2, true),
+            'text' => $this->faker->paragraph(3),
+                //fake()->sentence(2, true),
             'user_id' => User::factory(),
             'film_id' => Film::factory(),
             'rating' => $this->faker->numberBetween(1, 10),

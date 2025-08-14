@@ -18,6 +18,7 @@ use App\Services\CommentService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
 
+
 class CommentController extends Controller
 {
     /**
@@ -31,14 +32,25 @@ class CommentController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Добавление комментария
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param StoreCommentRequest $request
+     * @param                     $filmId
+     *
+     * @return SuccessResponse
      */
-    public function store(Request $request)
+    public function store(StoreCommentRequest $request, $filmId): Success
     {
-        return $this->success([]);
+//        $commentService= new CommentService();
+//        $comment = $this->commentService->createComment([
+        $comment = Comment::create([
+            'user_id' => Auth::user()->id,//auth()->id(),
+            'film_id' => $filmId,
+            'text' => $request->text,
+            'rating' => $request->rating,
+        ]);
+
+        return $this->success($comment, 201);
     }
 
 

@@ -39,18 +39,40 @@ class Comment extends Model
 
     public const string DEFAULT_AUTHOR_NAME = "Гость";
 
-    protected $visible = [
-        'id',
+    protected $casts = [
+        'rating' => 'int',
+        'comment_id' => 'int',
+        'user_id' => 'int',
+        'film_id' => 'int'
+    ];
+
+    protected $fillable = [
         'text',
+        'author',
+        'rating',
+        'comment_id',
+        'user_id',
+        'film_id'
+    ];
+
+    /*protected $visible = [
+        'id',
+//        'text',
         'rating',
         'parent_id',
         'created_at',
         'author',
+
+    ];
+
+    protected $fillable = [
+        'text',
+        'user_id',
     ];
 
     protected $appends = [
         'author',
-    ];
+    ];*/
 
     public function user(): BelongsTo
     {
