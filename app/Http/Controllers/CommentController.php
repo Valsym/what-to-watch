@@ -61,9 +61,35 @@ class CommentController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(StoreCommentRequest $request, $id): Success
     {
-        return $this->success([]);
+        $user = Auth::user();//User::find($id);
+        $comment = Comment::find($id)->first();
+
+        if (Gate::allows('update-comment', $comment)){
+            $comment = $comment->update([
+                'id' => $id,
+//                'user_id' => $user->id,//auth()->id(),
+//                'film_id' => $filmId,
+                'text' => $request->text,
+                'rating' => $request->rating,
+            ]);
+
+            return $this->success($comment, 201);
+            /*$updatedComment = $this->commentUpdateService->updateComment($comment,
+                $request->validated());
+
+            return $this->success(
+                [
+                    'text' => $updatedComment->text,
+                    'rate' => $updatedComment->rate,
+                ], 200
+            );*/
+        }
+
+        // Юзер не имеет доступа к редактированию комментария
+        abort(403, 'Комментарий может редактировать только его автор или Модератор');
+
     }
 
     /**

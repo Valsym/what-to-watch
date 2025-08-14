@@ -88,4 +88,48 @@ class CommentTest extends TestCase
         $response->assertStatus(401);
     }
 
+    /**
+     * Попытка редактирования комментария пользователем не автором комментария.
+     */
+    public function testUpdateCommentByCommonUser()
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $comment = Comment::factory()->create();
+
+        $response = $this->patchJson(route('comments.update', $comment), []);
+
+        $response->assertStatus(403);
+    }
+
+    /**
+     * Пользователь не может редактировать чужой комментарий
+     *
+     * @return void
+     */
+    public function testUserCannotUpdateOthersComments(): void
+    {
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $anotherUser = User::factory()->create();
+        $comment = Comment::factory()->create([
+            'user_id' => $anotherUser->id,
+        ]);
+
+        $newText = 'Test comment Test comment Test comment Test comment';
+
+        $response = $this->patchJson(route('comments.update', ['comment' => $comment->id]), [
+            'text' => $newText,
+        ]);
+
+        $response->assertStatus(403);
+//        $this->assertDatabaseHas('comments', [
+//            'id' => $comment->id,
+//            'user_id' => $anotherUser->id,
+//            'text' => $comment->text,
+//            'rating' => $comment->rate,
+//        ]);
+    }
+
 }
