@@ -135,7 +135,7 @@ class CommentTest extends TestCase
     /**
      * Успешное редактирование комментария автором.
      */
-    public function testUpdateCommentByAthor()
+    public function testUpdateCommentByAthor() // не прошел
     {
         $user = User::factory()->create();
         Sanctum::actingAs($user);
@@ -206,6 +206,22 @@ class CommentTest extends TestCase
 //            'user_id' => $user->id,
             'text' => $newText,
             'rating' => 7,
+        ]);
+    }
+
+    /**
+     * Проверка попытки удаления комментария не аутентифицированным пользователем.
+     */
+    public function testDeleteCommentByGuest()
+    {
+        $comment = Comment::factory()->create();
+
+        $response = $this->deleteJson(route('comments.destroy', $comment->id));
+
+        $response->assertStatus(401);
+        $response->assertJsonFragment(['message' => 'Unauthenticated.']);//'Запрос требует аутентификации.']);
+        $this->assertDatabaseHas('comments', [
+            'id' => $comment->id,
         ]);
     }
 
