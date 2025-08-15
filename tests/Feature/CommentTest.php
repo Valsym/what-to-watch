@@ -277,4 +277,20 @@ class CommentTest extends TestCase
         ]);
     }
 
+    /**
+     * Успешное удаление модератором комментария и всех его ответов.
+     */
+    public function testDeleteCommentsByModerator()
+    {
+        Sanctum::actingAs(User::factory()->moderator()->create());
+
+        $comment = Comment::factory()->create();
+        Comment::factory(3)->for($comment, 'parent')->create();
+
+        $response = $this->deleteJson(route('comments.destroy', $comment));
+
+        $response->assertStatus(204);
+        $this->assertDatabaseCount('comments', 0);
+    }
+
 }

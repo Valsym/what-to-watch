@@ -76,15 +76,7 @@ class CommentController extends Controller
             ]);
 
             return $this->success($comment, 201);
-            /*$updatedComment = $this->commentUpdateService->updateComment($comment,
-                $request->validated());
 
-            return $this->success(
-                [
-                    'text' => $updatedComment->text,
-                    'rate' => $updatedComment->rate,
-                ], 200
-            );*/
         }
 
         // Юзер не имеет доступа к редактированию комментария
@@ -100,34 +92,34 @@ class CommentController extends Controller
      */
     public function destroy($id)
     {
-        $user = Auth::user();//User::find($id);
+        $user = Auth::user();
         $comment = Comment::find($id)->first();
 
-        if (Gate::allows('comment-delete', $comment)
-            && !$comment->replies()->exists()){ // и нет цепочки ком ментариев ниже
+        if (Gate::allows('comment-delete', $comment)){
             // Юзер авторизован для выполнения этого действия
+            if ($comment->replies()->exists()) {
+                if($user->isModerator()) {
+                    $comment->replies()->delete();
+                    $comment->delete();
 
-            if (Comment::destroy($id)) {
-                return $this->success(null, 204);
-            } else {
-                return new Fail(
-                    message: "Не удалось удалить комментарий user_id=$user->id coment_id=$id",
-                    data: [
-                        'id' => ['Неверный id.'],
-                    ],
-                    code: Response::HTTP_CONFLICT
-                );
+                    return $this->success([], 204);
+                }
+                throw new AuthorizationException('Нельзя удалить комментарий с ответами');
+
             }
-        } else if ($comment->replies()->exists()) {
-            throw new AuthorizationException('Нельзя удалить комментарий с ответами');
-        } else {
-            // Юзер не имеет доступа к удалению комментария
-            abort(403, 'Комментарий может удалить только его автор или Модератор');
+
+            $comment->delete();
+
+            return $this->success([], 204);
+
+        } else if ($user->id === $comment->user_id && $comment->replies()->exists()) {
+            abort(403, 'Нельзя удалить комментарий с ответами');
         }
+        // Юзер не имеет доступа к удалению комментария
+        abort(403, 'Комментарий может удалить только его автор или Модератор');
+
 
         // Либо так (без Гейта)
-//        $comment = Comment::where('id', $id)->first();
-//        $deletedRows = DB::table('comments')->where('id', $id)->delete();
         if($user->isModerator() || $user->id === $comment->user_id) {
 
             if (Comment::destroy($id)) {
