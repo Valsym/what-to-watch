@@ -225,4 +225,20 @@ class CommentTest extends TestCase
         ]);
     }
 
+    /**
+     * Попытка удаления комментария пользователем не автором комментария.
+     */
+    public function testDeleteCommentByCommonUser()
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $comment = Comment::factory()->create();
+
+        $response = $this->deleteJson(route('comments.destroy', $comment));
+
+        $response->assertStatus(403);
+        $response->assertJsonFragment(['message' =>
+            'Комментарий может удалить только его автор или Модератор']);
+    }
+
 }
