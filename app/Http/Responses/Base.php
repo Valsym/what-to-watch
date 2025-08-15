@@ -84,7 +84,7 @@ abstract class Base implements Responsable
      *
      * @return array
      */
-    protected function prepareData()//: array
+    protected function prepareData(): array|string
     {
         if ($this->data instanceof Arrayable) {
             return $this->data->toArray();

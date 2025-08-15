@@ -9,7 +9,7 @@ final class StoreCommentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'text' => 'required|string|min:50|max:400',
+            'text' => 'required|string|min:10|max:400',
             'rate' => 'integer|min:1|max:10',
             'comment_id' => 'nullable|exists:comments,id'
         ];

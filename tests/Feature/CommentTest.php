@@ -181,4 +181,32 @@ class CommentTest extends TestCase
         ]);
     }
 
+    /**
+     * Успешное редактирование комментария модератором.
+     */
+    public function testUpdateCommentByModerator()
+    {
+        Sanctum::actingAs(User::factory()->moderator()->create());
+
+        $comment = Comment::factory()->create();
+
+        $newText = 'some text some text';
+
+        $data = [
+            'text' => $newText,
+            'rating' => 7,
+        ];
+
+        $response = $this->patchJson(route('comments.update', $comment), $data);
+
+        $response->assertStatus(201);
+//        $response->assertJsonFragment($data);
+        $this->assertDatabaseHas('comments', [
+            'id' => $comment->id,
+//            'user_id' => $user->id,
+            'text' => $newText,
+            'rating' => 7,
+        ]);
+    }
+
 }
