@@ -241,4 +241,22 @@ class CommentTest extends TestCase
             'Комментарий может удалить только его автор или Модератор']);
     }
 
+    /**
+     * Попытка удаления автором комментария имеющего ответы.
+     */
+    public function testDeleteCommentWithAnswersByAuthor()
+    {
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $comment = Comment::factory()->for($user)->create();
+        Comment::factory(3)->for($comment, 'parent')->create();
+
+        $response = $this->deleteJson(route('comments.destroy', $comment));
+
+        $response->assertStatus(403);
+        $response->assertJsonFragment(['message' => 'Нельзя удалить комментарий с ответами']);
+        //'Неавторизованное действие.']);
+    }
+
 }

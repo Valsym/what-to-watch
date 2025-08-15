@@ -91,4 +91,16 @@ class Comment extends Model
     {
         return $this->hasMany(Comment::class, 'parent_id');
     }
+
+    /**
+     * Родительский комментарий
+     *
+     * @return         BelongsTo
+     * @psalm-suppress PossiblyUnusedMethod
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Comment::class, 'parent_id');
+    }
+
 }

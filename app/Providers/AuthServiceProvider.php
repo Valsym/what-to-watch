@@ -41,7 +41,8 @@ class AuthServiceProvider extends ServiceProvider
             if ($user->isModerator()) {
                 return true;
             }
-            return $user->id === $comment->user_id && $comment->comments->isEmpty();
+            return $user->id === $comment->user_id && !$comment->replies()->exists();
+            //$comment->comments->isEmpty();
         });
 
         Gate::define('update-comment', function (User $user, Comment $comment) {
