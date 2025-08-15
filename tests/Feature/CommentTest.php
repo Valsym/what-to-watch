@@ -259,4 +259,22 @@ class CommentTest extends TestCase
         //'Неавторизованное действие.']);
     }
 
+    /**
+     * Успешное удаление автором комментария без ответов.
+     */
+    public function testDeleteCommentByAuthor()
+    {
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $comment = Comment::factory()->for($user)->create();
+
+        $response = $this->deleteJson(route('comments.destroy', $comment));
+
+        $response->assertStatus(204);
+        $this->assertDatabaseMissing('comments', [
+            'id' => $comment->id,
+        ]);
+    }
+
 }
