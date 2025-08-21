@@ -53,4 +53,24 @@ class UserTest extends TestCase
         $response->assertJsonFragment(['message' => 'Unauthenticated.']);
     }
 
+    /**
+     * Проверить пользователь может изменить свое имя, email, пароль или загрузить аватар.
+     * Проверка вызова метода обновления пользователя без изменения email
+     */
+    public function testUpdateUserWithoutChangeEmail()
+    {
+        $user = User::factory()->create();
+        $new = User::factory()->make();
+        Sanctum::actingAs($user);
+
+        $params = ['email' => $user->email, 'name' => $new->name];
+
+        $response = $this->patchJson(route('user.update', $params));
+
+        $response->assertOk()
+            ->assertJsonStructure([
+                'data',
+            ]);
+    }
+
 }

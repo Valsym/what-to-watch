@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Responses\Success;
+use App\Models\Comment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\UserRequest;
 
 class UserController extends Controller
 {
@@ -27,33 +30,43 @@ class UserController extends Controller
      */
     public function show(int $id)
     {
-        $user = Auth::user();
-//        $user = User::find($id)->first();
-
-        if ($user->id === null) {
-            abort(401, 'Пользователь не авторизован');
-//            return $this->error('Пользователь не может просматривать чужой профиль');
-        }
-
-        return $this->success([
-            'name' => $user->name,
-            'email' => $user->email,
-            'avatar' => $user->avatar,
-            'role' => $user->role,
-        ]);//, 201);
-
+        return $this->success(Auth::user());
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param UserRequest $request
+     * @param $id
+     * @return Success
      */
-    public function update(Request $request, $id)
+    public function update(UserRequest $request): Success
     {
-        return $this->success([]);
+        $params = $request->safe()->except('file');
+        $user = Auth::user();
+        $path = false;
+
+        if($request->hasFile('file')) {
+            $oldFile = $user->avatar;
+            $result = $request->file('file')->store('avatars', 'public');
+            $path = $result ? $request->file('file')->hashName() : false;
+            $params['avatar'] = $path;
+        }
+
+//        $user = $user->update([
+//            'name' => $request->name,
+//            'email' => $request->email,
+//            'file' => $request->file,
+//        ]);
+        $user->update($params);
+
+        if($path) {
+            Storage::disk('public')->delete($oldFile);
+        }
+
+//        return $this->success($user, 201);
+//        return $this->success(Auth::user()->makeVisible('email'));
+        return $this->success($user->fresh());
     }
 
     /**
