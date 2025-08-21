@@ -33,7 +33,7 @@ Route::post('/register', [AuthController::class, 'register'])->name('auth.regist
 Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
-Route::get('/user/{user}', [UserController::class, 'show'])->name('user.show');
+Route::middleware('auth:sanctum')->get('/user/{user}', [UserController::class, 'show'])->name('user.show');
 Route::middleware('auth:sanctum')->patch('/user', [UserController::class, 'update'])->name('user.update');
 
 Route::get('/films/{film}/similar', [FilmController::class, 'similar'])->name('film.similar');

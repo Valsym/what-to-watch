@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -23,9 +25,23 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(int $id)
     {
-//        return $this->success([]);
+        $user = Auth::user();
+//        $user = User::find($id)->first();
+
+        if ($user->id === null) {
+            abort(401, 'Пользователь не авторизован');
+//            return $this->error('Пользователь не может просматривать чужой профиль');
+        }
+
+        return $this->success([
+            'name' => $user->name,
+            'email' => $user->email,
+            'avatar' => $user->avatar,
+            'role' => $user->role,
+        ]);//, 201);
+
     }
 
     /**

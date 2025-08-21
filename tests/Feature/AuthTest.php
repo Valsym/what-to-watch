@@ -4,13 +4,8 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
-use App\Models\Film;
 use App\Models\User;
-use Laravel\Sanctum\Sanctum;
-use App\Http\Requests\LoginRequest;
-
 
 class AuthTest extends TestCase
 {
