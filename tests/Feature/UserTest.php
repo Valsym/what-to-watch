@@ -54,6 +54,17 @@ class UserTest extends TestCase
     }
 
     /**
+     * Проверка вызова метода обновления пользователя не аутентифицированным пользователем.
+     */
+    public function testUpdateUserByGuest()
+    {
+        $response = $this->patchJson(route('user.update'), []);
+
+        $response->assertStatus(401);
+        $response->assertJsonFragment(['message' => 'Unauthenticated.']);//'Запрос требует аутентификации.']);
+    }
+
+    /**
      * Проверить пользователь может изменить свое имя, email, пароль или загрузить аватар.
      * Проверка вызова метода обновления пользователя без изменения email
      */
