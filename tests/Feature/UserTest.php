@@ -93,4 +93,24 @@ class UserTest extends TestCase
 //        ]);
     }
 
+    /**
+     * Проверка вызова метода обновления пользователя с пустыми параметрами.
+     */
+    public function testValidationForUpdateUser()
+    {
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $params = [];
+
+        $response = $this->patchJson(route('user.update', $params));
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['errors' => ['name', 'email']]);
+//        $response->assertJsonFragment([
+//            'name' => ['Поле Имя обязательно для заполнения.'],
+//            'email' => ['Поле E-Mail адрес обязательно для заполнения.']
+//        ]);
+    }
+
 }
