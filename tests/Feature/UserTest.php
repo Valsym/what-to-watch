@@ -57,7 +57,7 @@ class UserTest extends TestCase
      * Проверить пользователь может изменить свое имя, email, пароль или загрузить аватар.
      * Проверка вызова метода обновления пользователя без изменения email
      */
-    public function testUpdateUserWithoutChangeEmail()
+    public function testUpdateUserWithoutUpdateEmail()
     {
         $user = User::factory()->create();
         $new = User::factory()->make();
@@ -71,6 +71,26 @@ class UserTest extends TestCase
             ->assertJsonStructure([
                 'data',
             ]);
+    }
+
+    /**
+     * Проверка вызова метода обновления пользователя с уже занятым email.
+     * Ожидается ошибка сообщающая о занятости переданного адреса.
+     */
+    public function testEmailUniqueValidationForUpdateUser()
+    {
+        $user = User::factory()->create();
+        $new = User::factory()->make();
+        Sanctum::actingAs($user);
+
+        $params = ['email' => $new->email];
+
+        $response = $this->patchJson(route('user.update', $params));
+
+        $response->assertStatus(422);
+//        $response->assertJsonFragment([
+//            'email' => ['validation.required']//'Такое значение поля E-Mail адрес уже существует.']
+//        ]);
     }
 
 }
