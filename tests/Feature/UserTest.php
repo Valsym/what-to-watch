@@ -3,11 +3,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\Comment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 
 class UserTest extends TestCase
@@ -122,6 +123,42 @@ class UserTest extends TestCase
 //            'name' => ['Поле Имя обязательно для заполнения.'],
 //            'email' => ['Поле E-Mail адрес обязательно для заполнения.']
 //        ]);
+    }
+
+    /**
+     * Проверка вызова метода обновления профиля с изменением email адреса и загрузкой аватара.
+     */
+    public function testUpdateUser() // тест не проходит
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $newUser = User::factory()->make();
+        $file = UploadedFile::fake()->image('photo1.jpg');
+
+        $params = [
+            'name' => $newUser->name,
+            'email' => $newUser->email,
+            'password' => $newUser->password,
+            'password_confirmation' => $newUser->password,
+            'avatar' => $file
+        ];
+
+        $response = $this->patchJson(route('user.update', $params));
+
+        $response->assertJsonFragment([
+            'name' => $newUser->name,
+            'email' => $newUser->email,
+            'avatar' => $file->hashName(),
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'name' => $newUser->name,
+            'email' => $newUser->email,
+            'avatar' => $file->hashName(),
+        ]);
     }
 
 }

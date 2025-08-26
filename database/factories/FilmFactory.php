@@ -31,6 +31,7 @@ class FilmFactory extends Factory
             'background_image' => $this->faker->imageUrl(),
             'video_link' => $this->faker->url(),
             'preview_video_link' => $this->faker->url(),
+            'status' => Film::STATUS_READY,
         ];
     }
 }

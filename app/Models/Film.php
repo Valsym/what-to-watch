@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * @property int $id
@@ -58,11 +59,16 @@ class Film extends Model
     public const STATUS_ON_MODERATION = 'moderate';
     public const STATUS_READY = 'ready';
 
+    public const LIST_FIELDS = ['films.id', 'name', 'preview_image', 'preview_video_link'];
+
     protected $with = ['genres'];
 
-    protected $hidden = [
-        'created_at',
-        'updated_at',
+    protected $table = 'films';
+
+
+    protected $appends = [
+        'rating',
+        'is_favorite',
     ];
 
     protected $casts = [
@@ -83,11 +89,54 @@ class Film extends Model
         'starring',
         'run_time',
         'released',
+        'promo',
+        'status',
+        'imdb_id',
+        'created_at',
+        'updated_at',
+
     ];
+
+    /*public const LIST_FIELDS = ['films.id', 'name', 'preview_image', 'preview_video_link'];
+
+    protected $with = ['genres'];
+
+    protected $appends = [
+        'rating',
+        'is_favorite',
+    ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+        'pivot',
+    ];
+
+    protected $casts = [
+        'starring' => 'array',
+        'promo' => 'bool',
+    ];
+
+    protected $fillable = [
+        'name',
+        'poster_image',
+        'preview_image',
+        'background_image',
+        'background_color',
+        'video_link',
+        'preview_video_link',
+        'description',
+        'director',
+        'starring',
+        'run_time',
+        'released',
+        'promo',
+    ];*/
 
     public function genres(): BelongsToMany
     {
-        return $this->belongsToMany(Genre::class);
+//        return $this->belongsToMany(Genre::class);
+        return $this->belongsToMany(Genre::class, 'film_genre');
     }
 
     public function comments(): HasMany
@@ -103,6 +152,11 @@ class Film extends Model
     public function getRatingAttribute()
     {
         return round($this->scores()->avg('rating'), 1);
+    }
+
+    public function getIsFavoriteAttribute()
+    {
+        return Auth::check() && Auth::user()->hasFilm($this);
     }
 
     /**
