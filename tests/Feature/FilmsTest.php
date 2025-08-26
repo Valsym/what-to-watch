@@ -77,4 +77,19 @@ class FilmsTest extends TestCase
         $this->assertEquals($films->pluck('id')->toArray(), Arr::pluck($result, 'id'));
     }
 
+    /**
+     * Проверка, что по умолчанию возвращаются только готовые фильмы.
+     */
+    public function testGetReadyFilms()
+    {
+        $film = Film::factory()->create(['status' => Film::STATUS_READY]);
+        Film::factory()->create(['status' => Film::STATUS_PENDING]);
+
+        $response = $this->getJson(route('films.index'));
+
+        $response->assertStatus(200);
+        $response->assertJsonCount(1, 'data');
+        $response->assertJsonFragment(['id' => $film->id]);
+    }
+
 }
