@@ -5,12 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Film;
 use App\Http\Requests\Films\FilmsListRequest;
 use App\Services\Films\FilmListService;
+use App\Services\Films\FilmCreateService;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Pagination\LengthAwarePaginator;
-use App\Http\Resources\FilmListResource;
+use App\Http\Resources\FilmResource;
 use App\Http\Responses\Success;
+use App\Http\Requests\Films\StoreFilmRequest;
+use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class FilmController extends Controller
 {
@@ -18,7 +22,7 @@ class FilmController extends Controller
 //        protected FavoriteFilmCheckService $favoriteFilmCheckService,
         protected FilmListService $filmListService,
 //        protected FilmDetailsService $filmDetailsService,
-//        protected FilmCreateService $filmCreateService,
+        protected FilmCreateService $filmCreateService,
 //        protected FilmUpdateService $filmUpdateService,
 //        protected SimilarFilmService $similarFilmService,
 //        protected PromoFilmService $promoFilmService,
@@ -46,19 +50,6 @@ class FilmController extends Controller
         return $this->success($this->toArray($films));
     }
 
-    public function toArray($request): array
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'poster_image' => $this->poster_image,
-            'preview_image' => $this->preview_image,
-            'preview_video_link' => $this->preview_video_link,
-            'genre' => $this->genres->pluck('name')->first(),
-            'released' => (int)$this->released,
-        ];
-    }
-
     /**
      * Получение списка фильмов.
      *
@@ -66,9 +57,6 @@ class FilmController extends Controller
      */
     public function index(Request $request)//(FilmsListRequest $request)
     {
-//        $filters = $request->validated();
-//        $userId = (int) auth()->id();
-
         $perPage = $request['per_page'] ?? 8;
 
         $films =
@@ -88,19 +76,33 @@ class FilmController extends Controller
             ->ordered($request->get('order_by'), $request->get('order_to'))
             ->paginate($perPage);
 
-        return $films;//->paginate(8);
-//        return $this->paginate($films);
+        return $films;
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Добавление фильма в базу.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return Responsable
      */
-    public function store(Request $request)
+    public function store0(Request $request)
     {
-        //
+        return $this->success([], 201);
+    }
+
+    /**
+     * Добавление фильма в бд
+     *
+     * @param StoreFilmRequest $request
+     *
+     * @return SuccessResponse
+     * @throws Throwable
+     */
+    public function store(StoreFilmRequest $request): Success
+    {
+        $film = $this->filmCreateService->createFilm($request->validated());
+
+        return $this->success(new FilmResource($film), Response::HTTP_CREATED);
     }
 
     /**

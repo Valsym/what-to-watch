@@ -134,4 +134,32 @@ class FilmsTest extends TestCase
         $this->assertEquals([$film2->id, $film3->id, $film1->id], Arr::pluck($result, 'id'));
     }
 
+    /**
+     * Проверка попытки
+     * @return void
+     */
+    public function testCreateFilmRoute()
+    {
+        $this->markTestSkipped('Требуется авторизация');
+        $response = $this->postJson(route('film.store'));
+
+        $response->assertStatus(201);
+    }
+
+    /**
+     * Тест ошибки 401 при попытке добавить фильм неавторизованным пользователем.
+     */
+    public function testStoreFilmUnauthenticated(): void
+    {
+        $response =
+            $this->postJson(route('film.store'), [
+                'imdb_id' => 'tt1234567',
+            ]);
+
+        $response->assertUnauthorized()->assertJson([
+            'message' => 'Unauthenticated.',
+//            'message' => 'Запрос требует аутентификации.',
+        ]);
+    }
+
 }
