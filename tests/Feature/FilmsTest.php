@@ -110,4 +110,28 @@ class FilmsTest extends TestCase
         $response->assertJsonFragment(['id' => $film->id]);
     }
 
+    /**
+     * Проверка получения списка фильмов отсортированных по рейтингу, по возрастанию.
+     */
+    public function testOrderedGetFilms()
+    {
+        $film1 = Film::factory()
+            ->has(Comment::factory()->state(['rating' => 5]))
+            ->create(['released' => 2001]);
+
+        $film2 = Film::factory()
+            ->has(Comment::factory()->state(['rating' => 1]))
+            ->create(['released' => 2002]);
+
+        $film3 = Film::factory()
+            ->has(Comment::factory()->sequence(['rating' => 3]))
+            ->create(['released' => 2003]);
+
+        $response = $this->getJson(route('films.index', ['order_by' => 'rating', 'order_to' => 'asc']));
+        $result = $response->json('data');
+
+        $response->assertStatus(200);
+        $this->assertEquals([$film2->id, $film3->id, $film1->id], Arr::pluck($result, 'id'));
+    }
+
 }
