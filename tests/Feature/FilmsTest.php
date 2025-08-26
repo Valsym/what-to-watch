@@ -92,4 +92,22 @@ class FilmsTest extends TestCase
         $response->assertJsonFragment(['id' => $film->id]);
     }
 
+    /**
+     * Проверка, что модератор может запросить список фильмов на модерации.
+     */
+    public function testGetNotReadyFilmsForModerator()
+    {
+        Sanctum::actingAs(User::factory()->moderator()->create());
+
+        $film = Film::factory()->create(['status' => Film::STATUS_ON_MODERATION]);
+        Film::factory()->create(['status' => Film::STATUS_READY]);
+        Film::factory()->create(['status' => Film::STATUS_PENDING]);
+
+        $response = $this->getJson(route('films.index', ['status' => Film::STATUS_ON_MODERATION]));
+
+        $response->assertStatus(200);
+        $response->assertJsonCount(1, 'data');
+        $response->assertJsonFragment(['id' => $film->id]);
+    }
+
 }

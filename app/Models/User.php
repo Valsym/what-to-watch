@@ -94,4 +94,17 @@ class User extends Authenticatable
     {
         return (int)$this->role === (int)self::ROLE_MODERATOR;
     }
+
+    /**
+     * Проверка есть ли указанный фильм в списке избранных.
+     */
+    public function hasFilm(Film $film): bool
+    {
+        return $this->films()->where('film_id', $film->id)->exists();
+    }
+
+    public function films(): BelongsToMany
+    {
+        return $this->belongsToMany(Film::class);
+    }
 }
