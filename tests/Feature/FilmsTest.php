@@ -55,21 +55,26 @@ class FilmsTest extends TestCase
         $response->assertJsonStructure(['data' => [], 'links' => [], 'total']);
         $response->assertJsonFragment(['total' => $count]);
 
-//        $response->assertOk()
-//            ->assertJsonStructure([
-//                'data' => [
-//                    '*' => [
-//                        'id',
-//                        'name',
-//                        'poster_image',
-//                        'preview_image',
-//                        'preview_video_link',
-//                        'genre',
-//                        'released'
-//                    ]
-//                ]
-//            ])
-//            ->assertJsonCount(8, 'data');
+    }
+
+    /**
+     * Проверка получения списка фильмов по жанру.
+     * Ожидается что будут возвращены только фильмы с указанным жанром.
+     * Указываем одинаковый год выпуска для исключения изменения порядка (дефолтной сортировки).
+     */
+    public function testGetFilmsByGenre()
+    {
+        $genre = Genre::factory()->create();
+        $count = 2;
+        $films = Film::factory($count)->hasAttached($genre)->create(['released' => 2000]);
+        Film::factory(3)->create();
+
+        $response = $this->getJson(route('films.index', ['genre' => $genre->name]));
+        $result = $response->json('data');
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment(['total' => $count]);
+        $this->assertEquals($films->pluck('id')->toArray(), Arr::pluck($result, 'id'));
     }
 
 }
