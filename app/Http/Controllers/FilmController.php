@@ -13,6 +13,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Resources\FilmResource;
 use App\Http\Responses\Success;
 use App\Http\Requests\Films\StoreFilmRequest;
+use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -100,9 +101,13 @@ class FilmController extends Controller
      */
     public function store(StoreFilmRequest $request): Success
     {
-        $film = $this->filmCreateService->createFilm($request->validated());
+        if (Gate::allows('film-store')) {
+            $film = $this->filmCreateService->createFilm($request->validated());
 
-        return $this->success(new FilmResource($film), Response::HTTP_CREATED);
+            return $this->success(new FilmResource($film), Response::HTTP_CREATED);
+        }
+
+        abort(403, 'Фильм может добавить в БД только Модератор');
     }
 
     /**

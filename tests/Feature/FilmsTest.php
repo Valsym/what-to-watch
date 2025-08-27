@@ -162,4 +162,27 @@ class FilmsTest extends TestCase
         ]);
     }
 
+    /**
+     * Тест ошибки 403 при попытке добавить фильм обычным пользователем.
+     */
+    public function testStoreFilmAsUser(): void
+    {
+        $moderator =
+            User::factory()->create([
+                'role' => User::ROLE_MODERATOR,
+            ]);
+
+        $user =
+            User::factory()->create([
+                'role' => User::ROLE_USER,
+            ]);
+
+        $response =
+            $this->actingAs($user)->postJson(route('film.store'), [
+                'imdb_id' => 'tt1234567',
+            ]);
+
+        $response->assertForbidden();
+    }
+
 }

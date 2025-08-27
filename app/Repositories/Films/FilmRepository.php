@@ -77,7 +77,7 @@ final class FilmRepository
         /**
          * @var Film $film
          */
-        $film = $film->load('genres', 'actors', 'directors');
+        $film = $film->load('genres');//, 'starring', 'director');
         return $film;
     }
 
