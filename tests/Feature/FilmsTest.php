@@ -185,4 +185,45 @@ class FilmsTest extends TestCase
         $response->assertForbidden();
     }
 
+    /**
+     * Тест успешного добавления фильма модератором.
+     *
+     * @return void
+     */
+    public function testStoreFilm(): void
+    {
+        $moderator =
+            User::factory()->create([
+                'role' => User::ROLE_MODERATOR,
+            ]);
+
+        $response =
+            $this->actingAs($moderator)->postJson(route('film.store'), [
+                'imdb_id' => 'tt1234567',
+            ]);
+
+        $response->assertCreated()->assertJsonStructure([
+            'data' => [
+                "id",
+                "name",
+                "poster_image",
+                "preview_image",
+                "background_image",
+                "background_color",
+                "video_link",
+                "preview_video_link",
+                "description",
+                "rating",
+                "scores_count",
+                "director",
+                "starring",
+                "run_time",
+                "genre",
+                "released",
+                "is_favorite",
+                "is_promo",
+            ]
+        ]);
+    }
+
 }
