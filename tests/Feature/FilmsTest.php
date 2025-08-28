@@ -246,4 +246,23 @@ class FilmsTest extends TestCase
         ]);
     }
 
+    /**
+     * Проверка получения информации о фильме.
+     * Аутентифицированный пользователь должен видеть информацию о наличии фильма в избранном.
+     */
+    public function testGetOneFilmByUser()
+    {
+        $film = Film::factory()->create();
+        $user = User::factory()->hasAttached($film)->create();
+        Sanctum::actingAs($user);
+
+        $response = $this->getJson(route('film.show', $film->id));
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment([
+            'name' => $film->name,
+            'is_favorite' => true,
+        ]);
+    }
+
 }
