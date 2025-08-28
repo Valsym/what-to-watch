@@ -226,4 +226,24 @@ class FilmsTest extends TestCase
         ]);
     }
 
+    /**
+     * Проверка получения информации о фильме.
+     * Ожидается возвращение дополнительно генерируемых полей в дополнение к информации из БД.
+     */
+    public function testGetOneFilmRoute()
+    {
+        $film = Film::factory()
+            ->has(Comment::factory(3)->sequence(['rating' => 1], ['rating' => 2], ['rating' => 1]))
+            ->create(['released' => 2001]);
+
+        $response = $this->getJson(route('film.show', $film->id));
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment([
+            'name' => $film->name,
+            'scores_count' => 3,
+            'rating' => 1.3,
+        ]);
+    }
+
 }

@@ -110,15 +110,15 @@ class FilmController extends Controller
         abort(403, 'Фильм может добавить в БД только Модератор');
     }
 
-    /**
-     * Display the specified resource.
+        /**
+     * Получение информации о фильме.
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param  \App\Models\Film  $film
+     * @return Responsable
      */
-    public function show($id)
+    public function show(Film $film)
     {
-        return $this->success([]);
+        return $this->success($film->append('rating')->loadCount('scores'));
     }
 
     /**
