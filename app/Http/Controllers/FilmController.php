@@ -116,9 +116,27 @@ class FilmController extends Controller
      * @param  \App\Models\Film  $film
      * @return Responsable
      */
-    public function show(Film $film)
+    public function show(int $id): Success
     {
+        $query = Film::with(
+            [
+                'genres',
+//                'actors',
+//                'directors',
+//                'favorites' => fn ($q) => $userId ? $q->where('user_id', $userId) : $q
+            ]
+        );
+
+//        return $query->findOrFail($id);
+
+        $film = $query->find($id, ['*']);
+
+        if (is_null($film)) {
+            abort(404, 'Запрашиваемая страница не существует');
+        }
+
         return $this->success($film->append('rating')->loadCount('scores'));
+
     }
 
     /**

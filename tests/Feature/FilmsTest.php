@@ -265,4 +265,36 @@ class FilmsTest extends TestCase
         ]);
     }
 
+    /**
+     * Заменить на обращение к несуществующему фильму
+     */
+    public function testWrongRoute()
+    {
+        $response = $this->getJson(route('film.show', 404));
+
+        $response->assertStatus(404);
+//        $response->assertJsonStructure(['message', 'errors' => ['exception']]);
+        $response->assertJsonFragment(['message' => 'Страница не найдена']);
+    }
+
+    /**
+     * Тестирование обработки случая, когда фильм не найден.
+     *
+     *  Проверяет:
+     *  - Статус ответа 404 Not Found
+     *  - Наличие корректного сообщения об ошибке
+     *  - Формат JSON-ответа
+     *
+     * @return void
+     */
+    public function testReturns404WhenFilmNotFound(): void
+    {
+        $response = $this->getJson(route('film.show', 999));
+
+        $response->assertNotFound()
+            ->assertJson([
+                'message' => 'Запрашиваемая страница не существует',
+            ]);
+    }
+
 }
