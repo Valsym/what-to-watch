@@ -6,6 +6,7 @@ use App\Models\Film;
 use App\Http\Requests\Films\FilmsListRequest;
 use App\Services\Films\FilmListService;
 use App\Services\Films\FilmCreateService;
+use App\Services\Films\FilmService;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -118,18 +119,20 @@ class FilmController extends Controller
      */
     public function show(int $id): Success
     {
-        $query = Film::with(
-            [
-                'genres',
-//                'actors',
-//                'directors',
-//                'favorites' => fn ($q) => $userId ? $q->where('user_id', $userId) : $q
-            ]
-        );
+//        $query = Film::with(
+//            [
+//                'genres',
+////                'actors',
+////                'directors',
+////                'favorites' => fn ($q) => $userId ? $q->where('user_id', $userId) : $q
+//            ]
+//        );
+//
+////        return $query->findOrFail($id);
+//
+//        $film = $query->find($id, ['*']);
 
-//        return $query->findOrFail($id);
-
-        $film = $query->find($id, ['*']);
+        $film = $this->findOrFail($id);
 
         if (is_null($film)) {
             abort(404, 'Запрашиваемая страница не существует');
@@ -163,11 +166,43 @@ class FilmController extends Controller
     }
 
     /**
-     * @param $id
-     * @return void
+     * Получение списка похожих фильмов.
+     *
+     * @param Film $film
+     * @return \App\Http\Responses\Success
      */
-    public function similar($id)
+    public function similar(int $id, FilmService $service)
     {
-        return $this->success([]);
+//        $service = new FilmService();
+        $film = $this->findOrFail($id);
+
+        return $this->success($service->getSimilarFor($film, Film::LIST_FIELDS));
+    }
+
+    /**
+     * Проверка существования фильма с заданным $id
+     * @param int $id
+     * @return Film|\Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model|null
+     */
+    public function findOrFail(int $id)
+    {
+        $query = Film::with(
+            [
+                'genres',
+//                'actors',
+//                'directors',
+//                'favorites' => fn ($q) => $userId ? $q->where('user_id', $userId) : $q
+            ]
+        );
+
+//        return $query->findOrFail($id);
+
+        $film = $query->find($id, ['*']);
+
+        if (is_null($film)) {
+            abort(404, 'Запрашиваемая страница не существует');
+        }
+
+        return $film;
     }
 }

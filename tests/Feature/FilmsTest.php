@@ -297,4 +297,23 @@ class FilmsTest extends TestCase
             ]);
     }
 
+    /**
+     * Проверка получения похожих фильмов.
+     * На основании принадлежности к одному жанру.
+     */
+    public function testGetSimilarFilmsRoute()
+    {
+        $genre = Genre::factory()->create();
+        $film = Film::factory()->hasAttached($genre)->create();
+        $film2 = Film::factory()->hasAttached($genre)->create();
+        $film3 = Film::factory()->hasAttached(Genre::factory())->create();
+
+        $response = $this->getJson(route('films.similar', $film->id));
+
+        $response->assertStatus(200);
+        $response->assertJsonCount(1);
+        $response->assertJsonFragment(['id' => $film2->id]);
+        $response->assertJsonMissing(['id' => $film3->id]);
+    }
+
 }

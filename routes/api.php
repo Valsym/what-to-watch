@@ -36,7 +36,7 @@ Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logo
 Route::middleware('auth:sanctum')->get('/user/{user}', [UserController::class, 'show'])->name('user.show');
 Route::middleware('auth:sanctum')->patch('/user', [UserController::class, 'update'])->name('user.update');
 
-Route::get('/films/{film}/similar', [FilmController::class, 'similar'])->name('film.similar');
+Route::get('/films/{film}/similar', [FilmController::class, 'similar'])->name('films.similar');
 
 Route::get('/films', [FilmController::class, 'index'])->name('films.index');
 Route::middleware('auth:sanctum')->post('/films', [FilmController::class, 'store'])->name('film.store');
