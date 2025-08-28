@@ -7,8 +7,10 @@ use App\Http\Requests\Films\FilmsListRequest;
 use App\Services\Films\FilmListService;
 use App\Services\Films\FilmCreateService;
 use App\Services\Films\FilmService;
+use App\Services\Films\FilmUpdateService;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
+use App\Http\Requests\Films\UpdateFilmRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Resources\FilmResource;
@@ -25,7 +27,7 @@ class FilmController extends Controller
         protected FilmListService $filmListService,
 //        protected FilmDetailsService $filmDetailsService,
         protected FilmCreateService $filmCreateService,
-//        protected FilmUpdateService $filmUpdateService,
+        protected FilmUpdateService $filmUpdateService,
 //        protected SimilarFilmService $similarFilmService,
 //        protected PromoFilmService $promoFilmService,
     ) {
@@ -79,17 +81,6 @@ class FilmController extends Controller
             ->paginate($perPage);
 
         return $films;
-    }
-
-    /**
-     * Добавление фильма в базу.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return Responsable
-     */
-    public function store0(Request $request)
-    {
-        return $this->success([], 201);
     }
 
     /**
@@ -149,9 +140,16 @@ class FilmController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UpdateFilmRequest $request, int $id): Success
     {
-        return $this->success([], 201);
+        if (Gate::allows('film-update')) {
+            $film = $this->filmUpdateService->updateFilm($id, $request->validated());
+
+            return $this->success(new FilmResource($film), Response::HTTP_OK);
+        }
+
+        abort(403, 'Обновить фильм может только Модератор');
+//        return $this->success([], 201);
     }
 
     /**

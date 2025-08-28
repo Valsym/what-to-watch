@@ -316,4 +316,24 @@ class FilmsTest extends TestCase
         $response->assertJsonMissing(['id' => $film3->id]);
     }
 
+    /**
+     * Тест успешного обновления фильма модератором.
+     *
+     * @return void
+     */
+    public function testUpdateFilm(): void
+    {
+        $moderator = User::factory()->create([
+            'role' => User::ROLE_MODERATOR,
+        ]);
+        $film = Film::factory()->create();
+
+        $response = $this->actingAs($moderator)->patchJson(route('film.update', $film->id), [
+            'name' => 'Updated Title',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonStructure(['data']);
+    }
+
 }

@@ -53,5 +53,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('film-store', function (User $user) {
             return (int)$user->role === User::ROLE_MODERATOR;
         });
+
+        Gate::define('film-update', function (User $user) {
+            return (int)$user->role === User::ROLE_MODERATOR;
+        });
     }
 }
