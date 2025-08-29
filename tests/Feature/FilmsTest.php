@@ -402,4 +402,17 @@ class FilmsTest extends TestCase
             ->assertJsonStructure(['data']);
     }
 
+    /**
+     * Тест ошибки 403 при попытке создать промо-фильм обычным пользователем.
+     */
+    public function testCreatePromoAsUser(): void
+    {
+        $user = User::factory()->create();
+        $film = Film::factory()->create();
+
+        $response = $this->actingAs($user)->postJson(route('promo.create', $film->id));
+
+        $response->assertForbidden();
+    }
+
 }
