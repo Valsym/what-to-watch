@@ -135,7 +135,7 @@ final class FilmRepository
         /**
          * @var Film $film
          */
-        $film = Film::where('is_promo', true)
+        $film = Film::where('promo', true)
             ->with(['genres', 'actors', 'directors'])
             ->firstOrFail();
 
@@ -143,21 +143,21 @@ final class FilmRepository
     }
 
     /**
-     * Сбросить флаг is_promo у всех фильмов
+     * Сбросить флаг promo у всех фильмов
      */
     public function resetPromoFlags(): void
     {
-        Film::where('is_promo', true)->update(['is_promo' => false]);
+        Film::where('promo', true)->update(['promo' => false]);
     }
 
     /**
-     * Установить флаг is_promo для фильма по ID
+     * Установить флаг promo для фильма по ID
      *
      * @param int $filmId
      * Количество обновленных записей (должно быть 1)
      */
     public function setPromoFlag(int $filmId): void
     {
-        Film::where('id', $filmId)->update(['is_promo' => true]);
+        Film::where('id', $filmId)->update(['promo' => true]);
     }
 }

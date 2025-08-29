@@ -178,4 +178,5 @@ class Film extends Model
     {
         $query->where('promo', true);
     }
+
 }

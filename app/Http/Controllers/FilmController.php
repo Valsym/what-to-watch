@@ -15,10 +15,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Resources\FilmResource;
 use App\Http\Responses\Success;
+use App\Repositories\Films\FilmRepository;
 use App\Http\Requests\Films\StoreFilmRequest;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
+use Illuminate\Support\Facades\DB;
 
 class FilmController extends Controller
 {
@@ -30,6 +32,7 @@ class FilmController extends Controller
         protected FilmUpdateService $filmUpdateService,
 //        protected SimilarFilmService $similarFilmService,
 //        protected PromoFilmService $promoFilmService,
+        protected FilmRepository $filmRepository
     ) {
     }
 
@@ -218,6 +221,29 @@ class FilmController extends Controller
 
 //        $this->setFavoriteFlag($film);
 //        $promo = $film->promo;
+
+        return $this->success(new FilmResource($film));
+    }
+
+    /**
+     * Создание промо
+     *
+     * @param $filmId
+     *
+     * @return Success
+     * @throws Throwable
+     */
+    public function createPromo($filmId): Success
+    {
+//        $film = $this->promoFilmService->setPromoFilm($filmId);
+        DB::transaction(
+            function () use ($filmId) {
+                $this->filmRepository->resetPromoFlags();
+                $this->filmRepository->setPromoFlag($filmId);
+            }
+        );
+
+        $film = $this->filmRepository->findOrFail($filmId);
 
         return $this->success(new FilmResource($film));
     }

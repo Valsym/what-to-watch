@@ -384,4 +384,22 @@ class FilmsTest extends TestCase
             ]);
     }
 
+    /**
+     * Тест создания промо-фильма модератором.
+     *
+     * @return void
+     */
+    public function testCreatePromo(): void
+    {
+        $moderator = User::factory()->create([
+            'role' => User::ROLE_MODERATOR,
+        ]);
+        $film = Film::factory()->create();
+
+        $response = $this->actingAs($moderator)->postJson(route('promo.create', $film->id));
+
+        $response->assertOk()
+            ->assertJsonStructure(['data']);
+    }
+
 }

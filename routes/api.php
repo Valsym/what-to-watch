@@ -9,6 +9,7 @@ use App\Http\Controllers\GenreController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PromoController;
+use App\Http\Middleware\CheckModerator;
 
 
 /*
@@ -79,7 +80,7 @@ Route::middleware('auth:sanctum')->delete('/comments/{comment}', [CommentControl
 //Route::get('/promo', [FilmController::class, 'showPromo'])->name('promo.show');
 Route::prefix('/promo')->group(function () {
     Route::get('/', [FilmController::class, 'showPromo'])->name('promo.show');
-    Route::post('/promo/{id}', [FilmController::class, 'store'])->middleware('auth:sanctum')->name(
-        'promo.create'
-    );
+    Route::post('/promo/{id}', [FilmController::class, 'createPromo'])->
+        middleware(CheckModerator::class)->//(['auth:sanctum', 'role:isModerator'])->
+        name('promo.create');
 });
