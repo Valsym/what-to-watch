@@ -81,4 +81,22 @@ class GenreTest extends TestCase
             ]);
     }
 
+    /**
+     * Тест: попытка обновить жанр обычным пользователем
+     *
+     * @return void
+     */
+    public function testUpdateGenreByUser(): void
+    {
+        $user = User::factory()->create();
+        $genre = Genre::factory()->create();
+
+        $response = $this->actingAs($user)->
+            patchJson(route('genre.update', $genre->id), [
+            'name' => 'Action',
+        ]);
+
+        $response->assertForbidden();
+    }
+
 }
