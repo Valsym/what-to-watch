@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Film;
 use App\Models\Genre;
 use App\Http\Responses\Success;
 use Illuminate\Http\Request;
@@ -45,6 +46,7 @@ class GenreController extends Controller
     public function update(Request $request, int $id): Success
     {
         $genre = Genre::findOrFail($id);
+
         $genre->update($request->only('name'));
 
         return $this->success(new GenreResource($genre));

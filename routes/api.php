@@ -46,7 +46,7 @@ Route::middleware('auth:sanctum')->patch('/films/{film}', [FilmController::class
 
 Route::get('/genres', [GenreController::class, 'index'])->name('genre.index');
 Route::patch('/genres/{genre}', [GenreController::class, 'update'])->
-    middleware('auth:sanctum', CheckModerator::class)->
+    middleware('auth:sanctum', 'is_moderator')->//CheckModerator::class)->
     name('genre.update');
 
 Route::get('/favorite', [FavoriteController::class, 'index'])->name('favorite.index');
@@ -83,6 +83,6 @@ Route::middleware('auth:sanctum')->delete('/comments/{comment}', [CommentControl
 Route::prefix('/promo')->group(function () {
     Route::get('/', [FilmController::class, 'showPromo'])->name('promo.show');
     Route::post('/promo/{id}', [FilmController::class, 'createPromo'])->
-        middleware('auth:sanctum', CheckModerator::class)->//(['auth:sanctum', 'role:isModerator'])->
+        middleware('auth:sanctum', 'is_moderator')->
         name('promo.create');
 });

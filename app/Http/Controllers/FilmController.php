@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Film;
 use App\Http\Requests\Films\FilmsListRequest;
+use App\Models\Genre;
 use App\Services\Films\FilmListService;
 use App\Services\Films\FilmCreateService;
 use App\Services\Films\FilmService;
@@ -91,7 +92,7 @@ class FilmController extends Controller
      *
      * @param StoreFilmRequest $request
      *
-     * @return SuccessResponse
+     * @return Success
      * @throws Throwable
      */
     public function store(StoreFilmRequest $request): Success
@@ -105,27 +106,14 @@ class FilmController extends Controller
         abort(403, 'Фильм может добавить в БД только Модератор');
     }
 
-        /**
-     * Получение информации о фильме.
+     /**
+     * Получение информации о фильме
      *
      * @param  \App\Models\Film  $film
      * @return Responsable
      */
     public function show(int $id): Success
     {
-//        $query = Film::with(
-//            [
-//                'genres',
-////                'actors',
-////                'directors',
-////                'favorites' => fn ($q) => $userId ? $q->where('user_id', $userId) : $q
-//            ]
-//        );
-//
-////        return $query->findOrFail($id);
-//
-//        $film = $query->find($id, ['*']);
-
         $film = $this->findOrFail($id);
 
         if (is_null($film)) {
@@ -133,7 +121,6 @@ class FilmController extends Controller
         }
 
         return $this->success($film->append('rating')->loadCount('scores'));
-
     }
 
     /**
@@ -152,7 +139,6 @@ class FilmController extends Controller
         }
 
         abort(403, 'Обновить фильм может только Модератор');
-//        return $this->success([], 201);
     }
 
     /**
@@ -176,6 +162,7 @@ class FilmController extends Controller
     {
 //        $service = new FilmService();
         $film = $this->findOrFail($id);
+//        $film = Film::findOrFail($id);
 
         return $this->success($service->getSimilarFor($film, Film::LIST_FIELDS));
     }

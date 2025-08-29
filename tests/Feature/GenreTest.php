@@ -43,10 +43,9 @@ class GenreTest extends TestCase
      */
     public function testGenreUpdateByModerator()
     {
-        $moderator =
-            User::factory()->create([
-                'role' => User::ROLE_MODERATOR,
-            ]);
+        $moderator = User::factory()->create([
+            'role' => User::ROLE_MODERATOR,
+        ]);
 
         $genre = Genre::factory()->create();
         $response = $this->actingAs($moderator)->
@@ -97,6 +96,28 @@ class GenreTest extends TestCase
         ]);
 
         $response->assertForbidden();
+    }
+
+    /**
+     * Тест попытки обновления несуществующего жанра
+     *
+     * @return void
+     */
+    public function testUpdateGenreNotFound(): void
+    {
+        $moderator = User::factory()->create([
+            'role' => User::ROLE_MODERATOR
+        ]);
+
+        $response = $this->actingAs($moderator)->
+            patchJson(route('genre.update', 404), [
+            'name' => 'Melodrama',
+        ]);
+
+        $response->assertNotFound()
+            ->assertJson([
+                'message' => 'Запрашиваемая страница не существует',
+            ]);
     }
 
 }
