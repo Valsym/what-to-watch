@@ -350,6 +350,19 @@ class FilmsTest extends TestCase
         $response->assertUnauthorized();
     }
 
-    
+    /**
+     * Тест ошибки 403 при попытке обновить фильм обычным пользователем.
+     */
+    public function testUpdateFilmAsUser(): void
+    {
+        $user = User::factory()->create();
+        $film = Film::factory()->create();
+
+        $response = $this->actingAs($user)->patchJson(route('film.update', $film->id), [
+            'name' => 'Forbidden',
+        ]);
+
+        $response->assertForbidden();
+    }
 
 }
