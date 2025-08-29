@@ -25,9 +25,23 @@ class Genre extends Model
 {
     use HasFactory;
 
-    protected $visible = [
-        'id',
-        'name',
+//    protected $visible = [
+//        'id',
+//        'name',
+//    ];
+    protected $table = 'genres';
+
+    protected $fillable = [
+        'name'
     ];
+
+    /**
+     * @psalm-suppress PossiblyUnusedMethod
+     * Laravel использует динамически
+     */
+    public function films(): BelongsToMany
+    {
+        return $this->belongsToMany(Film::class, 'genre_film');
+    }
 
 }

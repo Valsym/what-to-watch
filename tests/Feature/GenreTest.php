@@ -34,8 +34,32 @@ class GenreTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonStructure(['data']);
-//        $response->assertJsonFragment(['total' => $count]);
+    }
 
+    /**
+     * Тест обновления названия жанра модератором
+     *
+     * @return void
+     */
+    public function testGenreUpdateByModerator()
+    {
+        $moderator =
+            User::factory()->create([
+                'role' => User::ROLE_MODERATOR,
+            ]);
+
+        $genre = Genre::factory()->create();
+        $response = $this->actingAs($moderator)->
+            patchJson(route('genre.update', $genre->id),
+            ['name' => 'New Genre',]);
+
+//        $response->assertStatus(200);
+//        $response->assertJsonStructure(['data']);
+
+        $response->assertOk()
+            ->assertJsonFragment([
+                'name' => 'New Genre',
+            ]);
     }
 
 }

@@ -45,7 +45,9 @@ Route::get('/films/{film}', [FilmController::class, 'show'])->name('film.show');
 Route::middleware('auth:sanctum')->patch('/films/{film}', [FilmController::class, 'update'])->name('film.update');
 
 Route::get('/genres', [GenreController::class, 'index'])->name('genre.index');
-Route::middleware('auth:sanctum')->patch('/genres/{genre}', [GenreController::class, 'update'])->name('genre.update');
+Route::patch('/genres/{genre}', [GenreController::class, 'update'])->
+    middleware('auth:sanctum', CheckModerator::class)->
+    name('genre.update');
 
 Route::get('/favorite', [FavoriteController::class, 'index'])->name('favorite.index');
 Route::middleware('auth:sanctum')->post('/films/{film}/favorite', [FavoriteController::class, 'store'])->name('favorite.store');

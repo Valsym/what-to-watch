@@ -21,10 +21,6 @@ class GenreController extends Controller
 
         return $this->success(GenreResource::collection($genres));
 
-//        return $this->success([
-//            'id' => $this->id,
-//            'name' => $this->name,
-//        ]);
     }
 
     /**
@@ -40,15 +36,18 @@ class GenreController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Обновление жанра
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @param $id
+     * @return Success
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id): Success
     {
-        return $this->success([]);
+        $genre = Genre::findOrFail($id);
+        $genre->update($request->only('name'));
+
+        return $this->success(new GenreResource($genre));
     }
 
 }
