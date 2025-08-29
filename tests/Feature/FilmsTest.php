@@ -415,4 +415,16 @@ class FilmsTest extends TestCase
         $response->assertForbidden();
     }
 
+    /**
+     * Тест ошибки 401 при попытке создать промо-фильм без авторизации.
+     */
+    public function testCreatePromoUnauthenticated(): void
+    {
+        $film = Film::factory()->create();
+
+        $response = $this->postJson(route('promo.create', $film->id));
+
+        $response->assertUnauthorized();
+    }
+
 }

@@ -81,6 +81,6 @@ Route::middleware('auth:sanctum')->delete('/comments/{comment}', [CommentControl
 Route::prefix('/promo')->group(function () {
     Route::get('/', [FilmController::class, 'showPromo'])->name('promo.show');
     Route::post('/promo/{id}', [FilmController::class, 'createPromo'])->
-        middleware(CheckModerator::class)->//(['auth:sanctum', 'role:isModerator'])->
+        middleware('auth:sanctum', CheckModerator::class)->//(['auth:sanctum', 'role:isModerator'])->
         name('promo.create');
 });
