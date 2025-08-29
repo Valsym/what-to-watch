@@ -2,18 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Genre;
+use App\Http\Responses\Success;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Collection;
+use App\Http\Resources\GenreResource;
 
 class GenreController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Список жанров
      *
-     * @return \Illuminate\Http\Response
+     * @return Success
      */
-    public function index()
+    public function index(): Success
     {
-        return $this->success([]);
+        $genres = Genre::all();
+
+        return $this->success(GenreResource::collection($genres));
+
+//        return $this->success([
+//            'id' => $this->id,
+//            'name' => $this->name,
+//        ]);
     }
 
     /**
