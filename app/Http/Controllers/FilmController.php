@@ -203,4 +203,22 @@ class FilmController extends Controller
 
         return $film;
     }
+
+    /**
+     * Показ промо
+     *
+     * @return SuccessResponse
+     */
+    public function showPromo(): Success
+    {
+//        $film = $this->promoFilmService->getPromoFilm();
+        $film = Film::where('promo', true)
+            ->with(['genres'])//, 'actors', 'directors'])
+            ->firstOrFail();
+
+//        $this->setFavoriteFlag($film);
+//        $promo = $film->promo;
+
+        return $this->success(new FilmResource($film));
+    }
 }

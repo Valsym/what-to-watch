@@ -32,6 +32,7 @@ class FilmFactory extends Factory
             'video_link' => $this->faker->url(),
             'preview_video_link' => $this->faker->url(),
             'status' => Film::STATUS_READY,
+//            'promo' => false,
         ];
     }
 }

@@ -365,4 +365,23 @@ class FilmsTest extends TestCase
         $response->assertForbidden();
     }
 
+    /**
+     * Тест получения текущего промо-фильма.
+     *
+     * @return void
+     */
+    public function testShowPromo(): void
+    {
+        $promoFilm = Film::factory()->create(['promo' => true]);
+        $response = $this->getJson(route('promo.show'));
+
+        $response->assertOk()
+            ->assertJson([
+                'data' => [
+                    'id' => $promoFilm->id,
+                    'promo' => true
+                ]
+            ]);
+    }
+
 }

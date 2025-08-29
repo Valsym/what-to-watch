@@ -76,9 +76,9 @@ Route::middleware('auth:sanctum')->delete('/comments/{comment}', [CommentControl
 //});
 
 //Route::post('/promo', [PromoController::class, 'store'])->name('promo.store');
-Route::get('/promo/{film}', [FilmController::class, 'show'])->name('promo.show');
+//Route::get('/promo', [FilmController::class, 'showPromo'])->name('promo.show');
 Route::prefix('/promo')->group(function () {
-//    Route::get('/', [FilmController::class, 'showPromo'])->name('promo.show');
+    Route::get('/', [FilmController::class, 'showPromo'])->name('promo.show');
     Route::post('/promo/{id}', [FilmController::class, 'store'])->middleware('auth:sanctum')->name(
         'promo.create'
     );

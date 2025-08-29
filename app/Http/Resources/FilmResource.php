@@ -69,7 +69,7 @@ class FilmResource extends JsonResource
                 $this->is_favorite,
                 false
             ),
-            'is_promo' => $this->is_promo === true,
+            'promo' => $this->promo === true,
         ];
     }
 }
