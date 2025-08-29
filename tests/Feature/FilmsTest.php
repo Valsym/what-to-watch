@@ -336,4 +336,20 @@ class FilmsTest extends TestCase
             ->assertJsonStructure(['data']);
     }
 
+    /**
+     * Тест ошибки 401 при попытке обновить фильм без авторизации.
+     */
+    public function testUpdateFilmUnauthenticated(): void
+    {
+        $film = Film::factory()->create();
+
+        $response = $this->patchJson(route('film.update', $film->id), [
+            'name' => 'No Access',
+        ]);
+
+        $response->assertUnauthorized();
+    }
+
+    
+
 }
