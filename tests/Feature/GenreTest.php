@@ -62,4 +62,23 @@ class GenreTest extends TestCase
             ]);
     }
 
+    /**
+     * Тест: попытка обновить жанр без авторизации
+     *
+     * @return void
+     */
+    public function testUpdateGenreUnauthenticated(): void
+    {
+        $genre = Genre::factory()->create();
+
+        $response = $this->patchJson(route('genre.update', $genre->id), [
+            'name' => 'test',
+        ]);
+
+        $response->assertUnauthorized()
+            ->assertJson([
+                'message' => 'Unauthenticated.',
+            ]);
+    }
+
 }
