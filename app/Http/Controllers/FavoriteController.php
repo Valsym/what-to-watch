@@ -13,6 +13,7 @@ class FavoriteController extends Controller
      */
     public function index()
     {
+
         return $this->success([]);
     }
 
