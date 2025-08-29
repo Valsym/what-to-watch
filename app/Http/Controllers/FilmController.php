@@ -26,36 +26,11 @@ use Illuminate\Support\Facades\DB;
 class FilmController extends Controller
 {
     public function __construct(
-//        protected FavoriteFilmCheckService $favoriteFilmCheckService,
         protected FilmListService $filmListService,
-//        protected FilmDetailsService $filmDetailsService,
         protected FilmCreateService $filmCreateService,
         protected FilmUpdateService $filmUpdateService,
-//        protected SimilarFilmService $similarFilmService,
-//        protected PromoFilmService $promoFilmService,
         protected FilmRepository $filmRepository
     ) {
-    }
-
-    /**
-     * Список фильмов
-     *
-     * @param FilmsListRequest $request
-     *
-     * @return Success
-     */
-    public function index1(FilmsListRequest $request): Success
-    {
-        $filters = $request->validated();
-        $userId = (int) auth()->id();
-
-        $perPage = $filters['per_page'] ?? 8;
-
-        $films = $this->filmListService->getFilmList($filters, $userId, $perPage);
-
-//        return $films;
-//        return $this->success(FilmListResource::collection($films));
-        return $this->success($this->toArray($films));
     }
 
     /**
@@ -114,11 +89,7 @@ class FilmController extends Controller
      */
     public function show(int $id): Success
     {
-        $film = $this->findOrFail($id);
-
-        if (is_null($film)) {
-            abort(404, 'Запрашиваемая страница не существует');
-        }
+        $film = Film::findOrFail($id);
 
         return $this->success($film->append('rating')->loadCount('scores'));
     }
@@ -160,54 +131,23 @@ class FilmController extends Controller
      */
     public function similar(int $id, FilmService $service)
     {
-//        $service = new FilmService();
-        $film = $this->findOrFail($id);
-//        $film = Film::findOrFail($id);
+        $film = Film::findOrFail($id);
 
         return $this->success($service->getSimilarFor($film, Film::LIST_FIELDS));
     }
 
     /**
-     * Проверка существования фильма с заданным $id
-     * @param int $id
-     * @return Film|\Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model|null
-     */
-    public function findOrFail(int $id)
-    {
-        $query = Film::with(
-            [
-                'genres',
-//                'actors',
-//                'directors',
-//                'favorites' => fn ($q) => $userId ? $q->where('user_id', $userId) : $q
-            ]
-        );
-
-//        return $query->findOrFail($id);
-
-        $film = $query->find($id, ['*']);
-
-        if (is_null($film)) {
-            abort(404, 'Запрашиваемая страница не существует');
-        }
-
-        return $film;
-    }
-
-    /**
      * Показ промо
      *
-     * @return SuccessResponse
+     * @return Success
      */
     public function showPromo(): Success
     {
-//        $film = $this->promoFilmService->getPromoFilm();
         $film = Film::where('promo', true)
             ->with(['genres'])//, 'actors', 'directors'])
             ->firstOrFail();
 
 //        $this->setFavoriteFlag($film);
-//        $promo = $film->promo;
 
         return $this->success(new FilmResource($film));
     }
@@ -222,7 +162,6 @@ class FilmController extends Controller
      */
     public function createPromo($filmId): Success
     {
-//        $film = $this->promoFilmService->setPromoFilm($filmId);
         DB::transaction(
             function () use ($filmId) {
                 $this->filmRepository->resetPromoFlags();
