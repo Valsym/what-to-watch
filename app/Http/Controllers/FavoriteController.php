@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
+use App\Http\Responses\Success;
+use App\Http\Responses\ErrorResponse;
+use App\Models\FavoriteFilm;
+use App\Models\Film;
 use Illuminate\Http\Request;
 
 class FavoriteController extends Controller
@@ -23,9 +28,30 @@ class FavoriteController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(int $filmId): Success|ErrorResponse
     {
-        return $this->success([]);
+        $show = $this->show($filmId);
+
+        if($show->statusCode === 200) {
+            return $this->success(['message' => 'Фильм уже в избранном'], 200);
+        }
+
+        $userId = auth()->id();
+
+        $ff = new FavoriteFilm();
+        $ff->user_id = $userId;
+        $ff->film_id = $filmId;
+        $ff->save();
+        // or
+//        FavoriteFilm::create(
+//            [
+//                'user_id' => $usrId,
+//                'film_id' => $filmId,
+//            ]
+//        );
+
+        return $this->success(['message' =>
+            "Фильм успешно добавлен в избранное!"], 201);
     }
 
     /**
@@ -34,9 +60,17 @@ class FavoriteController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($filmId): Success|ErrorResponse
     {
-        return $this->success([]);
+        $userId = auth()->id();
+        if(FavoriteFilm::where('user_id', $userId)->
+            where('film_id', $filmId)->first()) {
+            return $this->success(['message' => 'Фильм найден в избранном'], 200);
+        }
+
+//        return $this->ErrorResponse([], 400);
+//        return $this->ErrorResponse('Фильм не найден', [], 404);
+        return $this->error('Фильм не найден в избранном', [], 404);
     }
 
     /**

@@ -42,4 +42,31 @@ class FavoriteTest extends TestCase
 
     }
 
+    /**
+     * Добавление фильма в избранное
+     *
+     * @return void
+     */
+    public function testAddFavoriteFilm()
+    {
+        $user = User::factory()->create();
+        $film = Film::factory()->create();
+
+        $response =
+            $this->actingAs($user)->postJson(route('favorite.store',
+                $film->id));
+//                [
+////                'user_id' => $user->id,
+//                'film_id' => $film->id,
+//            ]);
+
+        $response->assertStatus(201)
+            ->assertJsonFragment(['message' => 'Фильм успешно добавлен в избранное!']);
+
+        $this->assertDatabaseHas('favorite_films', [
+            'user_id' => $user->id,
+            'film_id' => $film->id,
+        ]);
+    }
+
 }

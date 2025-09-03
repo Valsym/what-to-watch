@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Responses\Success;
+use App\Http\Responses\ErrorResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -16,5 +17,16 @@ class Controller extends BaseController
     public function success($data, ?int $code = Response::HTTP_OK)
     {
         return new Success($data, $code);
+    }
+
+    /**
+     * Возвращает ошибку с сообщением и HTTP-статусом.
+     */
+    protected function error(
+        string $message,
+        array|Validator $errors = [],
+        int $statusCode = Response::HTTP_BAD_REQUEST
+    ): ErrorResponse {
+        return new ErrorResponse($message, $errors, $statusCode);
     }
 }
