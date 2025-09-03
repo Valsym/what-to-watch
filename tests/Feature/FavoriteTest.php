@@ -15,7 +15,7 @@ class FavoriteTest extends TestCase
      * Проверяет:
      * + Получение списка избранных фильмов пользователя
      * + Добавление фильма в избранное
-     * * Удаление фильма из избранных
+     * + Удаление фильма из избранных
      * * Ошибка при попытке добавить фильм дважды
      * * Ошибка при попытке добавить не существующий фильм
      */
@@ -100,6 +100,31 @@ class FavoriteTest extends TestCase
         $response->assertStatus(201)
             ->assertJsonFragment(['message' => 'Фильм успешно удален из избранного!']);
 
+    }
+
+    /**
+     * Тест: Ошибка при попытке добавить фильм дважды
+     *
+     * @return void
+     */
+    public function testErrorAddFilmToFavoriteTwice()
+    {
+        $user = User::factory()->create();
+        $film = Film::factory()->create();
+
+        $response =
+            $this->actingAs($user)->postJson(route('favorite.store',
+                $film->id));
+        $response =
+            $this->actingAs($user)->postJson(route('favorite.store',
+                $film->id));
+//                [
+////                'user_id' => $user->id,
+//                'film_id' => $film->id,
+//            ]);
+
+        $response->assertStatus(401)
+            ->assertJsonFragment(['message' => 'Фильм уже в избранном']);
     }
 
 }

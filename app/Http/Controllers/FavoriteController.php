@@ -64,7 +64,8 @@ class FavoriteController extends Controller
         $show = $this->show($filmId);
 
         if($show->statusCode === 200) {
-            return $this->success(['message' => 'Фильм уже в избранном'], 200);
+//            return $this->success(['message' => 'Фильм уже в избранном'], 200);
+            return $this->error('Фильм уже в избранном', [], 401);
         }
 
         $userId = auth()->id();
