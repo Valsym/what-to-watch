@@ -37,8 +37,21 @@ class FavoriteTest extends TestCase
 
         $response = $this->getJson(route('favorite.index'));
 
+//        $response->dump();
         $response->assertOk()
-            ->assertJsonFragment(['data']);
+            ->assertJsonStructure(['data']);
+
+
+//        $response->assertStatus(200)
+//            ->assertJsonStructure(['data' => [[
+//                'id',
+//                'name',
+//                'poster_image',
+//                'preview_image',
+//                'preview_video_link',
+//                'genre',
+//                'released'
+//            ]]]);
 
     }
 

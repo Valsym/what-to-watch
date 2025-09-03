@@ -41,7 +41,7 @@ final class FilmListResource extends JsonResource
             'poster_image' => $this->poster_image,
             'preview_image' => $this->preview_image,
             'preview_video_link' => $this->preview_video_link,
-            'genre' => $this->genres->pluck('name')->first(),
+            'genre' => $this->genres !== null ? $this->genres->pluck('name')->first() : null,
             'released' => (int)$this->released,
         ];
     }

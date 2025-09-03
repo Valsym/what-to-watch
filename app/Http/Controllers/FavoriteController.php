@@ -8,6 +8,8 @@ use App\Http\Responses\ErrorResponse;
 use App\Models\FavoriteFilm;
 use App\Models\Film;
 use Illuminate\Http\Request;
+use App\Http\Resources\FilmListResource;
+use App\Http\Resources\FilmResource;
 
 class FavoriteController extends Controller
 {
@@ -18,8 +20,37 @@ class FavoriteController extends Controller
      */
     public function index()
     {
+        $userId = auth()->id();
+        $perPage = 8;
 
-        return $this->success([]);
+        $ff = FavoriteFilm::where('user_id', $userId)->
+            with('film'
+//                ['film' => function ($query) {
+//            $query->with(
+//                [
+//                    'genres:genres.id,genres.name',
+////                    'actors:actors.id,actors.name',
+////                    'directors:directors.id,directors.name',
+//                ]
+//            );
+//        }]
+        )->latest()->paginate($perPage);//->get();
+
+//        $items = collect($ff->items());
+//        $formatted = $items->map(
+//            function ($favorite) {
+//                $film = $favorite->film;
+//                $film->is_favorite = true;
+//                $film->added_at = $favorite->created_at->format('Y-m-d H:i:s');
+//                return new filmResource($film);
+//            }
+//        );
+//
+//        return $this->success(FilmListResource::collection($formatted));
+
+        return $this->success($ff);
+//        dd($ff);//FilmListResource::collection($ff));
+//        return $this->success(FilmListResource::collection($ff));
     }
 
     /**
