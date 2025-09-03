@@ -16,7 +16,7 @@ class FavoriteTest extends TestCase
      * + Получение списка избранных фильмов пользователя
      * + Добавление фильма в избранное
      * + Удаление фильма из избранных
-     * * Ошибка при попытке добавить фильм дважды
+     * + Ошибка при попытке добавить фильм дважды
      * * Ошибка при попытке добавить не существующий фильм
      */
 
@@ -118,13 +118,30 @@ class FavoriteTest extends TestCase
         $response =
             $this->actingAs($user)->postJson(route('favorite.store',
                 $film->id));
-//                [
-////                'user_id' => $user->id,
-//                'film_id' => $film->id,
-//            ]);
 
         $response->assertStatus(401)
             ->assertJsonFragment(['message' => 'Фильм уже в избранном']);
+    }
+
+    /**
+     * Тест: Ошибка при попытке добавить в избранное не существующий фильм
+     *
+     * @return void
+     */
+    public function testErrorAddNotExistFilmToFavorite()
+    {
+        $user = User::factory()->create();
+
+        $response =
+            $this->actingAs($user)->postJson(route('favorite.store',
+                9999));
+
+        $response->assertNotFound()
+            ->assertJson([
+                'message' => 'Запрашиваемая страница не существует',
+            ]);
+//        $response->assertStatus(403)
+//            ->assertJsonFragment(['message' => 'Ошибка при попытке добавить не существующий фильм']);
     }
 
 }

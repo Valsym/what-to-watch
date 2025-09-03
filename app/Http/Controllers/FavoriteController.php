@@ -7,6 +7,7 @@ use App\Http\Responses\Success;
 use App\Http\Responses\ErrorResponse;
 use App\Models\FavoriteFilm;
 use App\Models\Film;
+use App\Models\Genre;
 use Illuminate\Http\Request;
 use App\Http\Resources\FilmListResource;
 use App\Http\Resources\FilmResource;
@@ -61,6 +62,8 @@ class FavoriteController extends Controller
      */
     public function store(int $filmId): Success|ErrorResponse
     {
+        Film::findOrFail($filmId);
+
         $show = $this->show($filmId);
 
         if($show->statusCode === 200) {
