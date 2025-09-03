@@ -13,8 +13,8 @@ class FavoriteTest extends TestCase
     /**
      * Функциональные тесты для проверки действий с избранными фильмами
      * Проверяет:
-     * * Получение списка избранных фильмов пользователя
-     * * Добавление фильма в избранное
+     * + Получение списка избранных фильмов пользователя
+     * + Добавление фильма в избранное
      * * Удаление фильма из избранных
      * * Ошибка при попытке добавить фильм дважды
      * * Ошибка при попытке добавить не существующий фильм
@@ -80,6 +80,26 @@ class FavoriteTest extends TestCase
             'user_id' => $user->id,
             'film_id' => $film->id,
         ]);
+    }
+
+    /**
+     * Тест: Удаление фильма из избранных
+     *
+     * @return void
+     */
+    public function testDeleteFilmFromFavorite()
+    {
+        $user = User::factory()->create();
+        $film = Film::factory()->create();
+        $user->favoriteFilms()->attach($film->id);
+
+        $response =
+            $this->actingAs($user)->deleteJson(route('favorite.destroy',
+                $film->id));
+
+        $response->assertStatus(201)
+            ->assertJsonFragment(['message' => 'Фильм успешно удален из избранного!']);
+
     }
 
 }

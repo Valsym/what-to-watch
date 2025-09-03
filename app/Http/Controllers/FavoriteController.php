@@ -122,9 +122,24 @@ class FavoriteController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($filmId)
     {
-        return $this->success([]);
+        if($this->show($filmId)->statusCode !== 200) {
+            return $this->success(['message' =>
+                'Фильм уже отсутствует в избранном'], 201);
+        }
+
+        FavoriteFilm::destroy($filmId);
+
+        if($this->show($filmId)->statusCode !== 200) {
+            return $this->success(['message' =>
+                'Фильм успешно удален из избранного!'], 201);
+        }
+
+        return $this->error(
+            'Не удалось удалить фильм из избранного',
+            [], 404);
+
     }
 
     /**
