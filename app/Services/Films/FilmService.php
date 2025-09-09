@@ -3,6 +3,8 @@
 namespace App\Services\Films;
 
 use App\Models\Film;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 class FilmService
 {
@@ -27,5 +29,23 @@ class FilmService
     public function getPromo()
     {
         return Film::promo()->latest('updated_at')->first();
+    }
+
+    /*
+     * Сохранение файла указанного типа
+     */
+    public function saveFile(string $url, string $type, string $name): string
+    {
+        // Рекомендации:
+        // Хранить файл с hash суффиксом, или иначе контролировать кеширование (при использовании hash в имени - нужно удалять старые версии)
+        // Ограничивать к-во файлов в одной папке
+
+        $file = Http::get($url)->body();
+        $ext = pathinfo($url, PATHINFO_EXTENSION);
+        $path = $type . DIRECTORY_SEPARATOR . $name . ".$ext";
+
+        Storage::disk('public')->put($path, $file);
+
+        return Storage::disk('public')->url($path);
     }
 }

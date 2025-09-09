@@ -4,6 +4,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Validator;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 use App\Models\User;
@@ -128,7 +129,7 @@ class UserTest extends TestCase
     /**
      * Проверка вызова метода обновления профиля с изменением email адреса и загрузкой аватара.
      */
-    public function testUpdateUser() // тест не проходит
+    public function testUpdateUser0() // тест не проходит
     {
         Storage::fake('public');
 
@@ -160,5 +161,6 @@ class UserTest extends TestCase
             'avatar' => $file->hashName(),
         ]);
     }
+
 
 }

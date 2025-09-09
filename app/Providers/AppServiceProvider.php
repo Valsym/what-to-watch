@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 //use Illuminate\Support\ServiceProvider;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Queue\Events\JobFailed;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -57,5 +59,20 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('film-update', function (User $user) {
             return (int)$user->role === User::ROLE_MODERATOR;
         });
+
+//        Queue::failing(function (JobFailed $event) {
+//             $event->connectionName;
+//             $event->job;
+//             $event->exception;
+//        });
+
+//        Event::listen(function (QueueBusy $event) {
+//            Notification::route('mail', 'dev@example.com')
+//                ->notify(new QueueHasLongWaitTime(
+//                    $event->connection,
+//                    $event->queue,
+//                    $event->size
+//                ));
+//        });
     }
 }

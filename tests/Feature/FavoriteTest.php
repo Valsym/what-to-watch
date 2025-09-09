@@ -140,8 +140,6 @@ class FavoriteTest extends TestCase
             ->assertJson([
                 'message' => 'Запрашиваемая страница не существует',
             ]);
-//        $response->assertStatus(403)
-//            ->assertJsonFragment(['message' => 'Ошибка при попытке добавить не существующий фильм']);
     }
 
 }

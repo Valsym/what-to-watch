@@ -9,6 +9,8 @@ use App\Services\Films\FilmListService;
 use App\Services\Films\FilmCreateService;
 use App\Services\Films\FilmService;
 use App\Services\Films\FilmUpdateService;
+use App\Support\Import\OmdbFilmsRepository000;
+use GuzzleHttp\Client;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use App\Http\Requests\Films\UpdateFilmRequest;
@@ -19,9 +21,18 @@ use App\Http\Responses\Success;
 use App\Repositories\Films\FilmRepository;
 use App\Http\Requests\Films\StoreFilmRequest;
 use Illuminate\Support\Facades\Gate;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 use Illuminate\Support\Facades\DB;
+
+use App\Support\Import\OmdbFilmRepository;
+use App\Support\Import\OmdbFilmService;
+
+use App\Jobs\UpdateFilm;
+use App\Jobs\UpdateFilms;
+use App\Support\Import\FilmsRepository;
 
 class FilmController extends Controller
 {
@@ -29,8 +40,13 @@ class FilmController extends Controller
         protected FilmListService $filmListService,
         protected FilmCreateService $filmCreateService,
         protected FilmUpdateService $filmUpdateService,
-        protected FilmRepository $filmRepository
+        protected FilmRepository $filmRepository,
+//        protected RequestFactoryInterface $httpFactory,
+//        protected ClientInterface $httpClient
+//        private \Psr\Http\Client\ClientInterface $httpClient
+//        protected FilmsRepository $repository
     ) {
+//        $this->repository = $repository;
     }
 
     /**
@@ -90,6 +106,23 @@ class FilmController extends Controller
     public function show(int $id): Success
     {
         $film = Film::findOrFail($id);
+
+//        $data = $this->repository->getFilm('tt0031381');
+
+        UpdateFilms::dispatchSync();//$film);
+
+////        $repository = new OmdbFilmsRepository($this->httpFactory,
+////         $this->httpClient);
+////        $data = $this->repository->getFilm('tt0031381');
+//        $client = new Client();
+//        $repository = new SomeHttpRepository($client);
+//        $service = new FilmService2($repository);
+//
+//        $filmData = $service->requestFilm('tt0031381');
+//        $path = 'files/'; // C:\Users\Ler2\projects\what-to-watch-12\public\files
+//        $check_file = $path."check-all.txt";
+//        file_put_contents($check_file, print_r($filmData, 1),
+//            FILE_APPEND | LOCK_EX);
 
         return $this->success($film->append('rating')->loadCount('scores'));
     }

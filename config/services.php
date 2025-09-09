@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'omdb' => [
+        'films' => [
+            'url' => env('EXT_API_FILMS', 'http://academy.localhost/api/films/')
+        ],
+        'comments' => [
+            'url' => env('EXT_API_COMMENTS', 'http://academy.localhost/api/comments/')
+        ],
+    ]
+
 ];

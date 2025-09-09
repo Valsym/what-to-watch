@@ -1,0 +1,62 @@
+ok!Array
+(
+    [Title] => Episode #5.17
+    [Year] => 2015
+    [Rated] => N/A
+    [Released] => 14 Jun 2015
+    [Season] => 5
+    [Episode] => 17
+    [Runtime] => N/A
+    [Genre] => News, Talk-Show
+    [Director] => N/A
+    [Writer] => N/A
+    [Actors] => Andrew Bolt, Tony Abbott, Piers Akerman
+    [Plot] => N/A
+    [Language] => English
+    [Country] => N/A
+    [Awards] => N/A
+    [Poster] => https://m.media-amazon.com/images/M/MV5BNWU4NjY0NWYtNjQ1NS00MjhlLWEwOWYtN2M2NWNiMGFlZTMyXkEyXkFqcGdeQXVyMjk3ODk1MzU@._V1_SX300.jpg
+    [Ratings] => Array
+        (
+        )
+
+    [Metascore] => N/A
+    [imdbRating] => N/A
+    [imdbVotes] => N/A
+    [imdbID] => tt6583198
+    [seriesID] => tt1927826
+    [Type] => episode
+    [Response] => True
+)
+
+
+data: 2025-09-09 22:49:27Array
+(
+    [Title] => Episode #5.17
+    [Year] => 2015
+    [Rated] => N/A
+    [Released] => 14 Jun 2015
+    [Season] => 5
+    [Episode] => 17
+    [Runtime] => N/A
+    [Genre] => News, Talk-Show
+    [Director] => N/A
+    [Writer] => N/A
+    [Actors] => Andrew Bolt, Tony Abbott, Piers Akerman
+    [Plot] => N/A
+    [Language] => English
+    [Country] => N/A
+    [Awards] => N/A
+    [Poster] => https://m.media-amazon.com/images/M/MV5BNWU4NjY0NWYtNjQ1NS00MjhlLWEwOWYtN2M2NWNiMGFlZTMyXkEyXkFqcGdeQXVyMjk3ODk1MzU@._V1_SX300.jpg
+    [Ratings] => Array
+        (
+        )
+
+    [Metascore] => N/A
+    [imdbRating] => N/A
+    [imdbVotes] => N/A
+    [imdbID] => tt6583198
+    [seriesID] => tt1927826
+    [Type] => episode
+    [Response] => True
+)
