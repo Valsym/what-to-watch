@@ -27,34 +27,35 @@ class UpdateFilm implements ShouldQueue
     }
 
     private string $check_file = "files/check-all.txt";
+    // C:/Users/Ler2/projects/what-to-watch-12/public/
     // C:\Users\Ler2\projects\what-to-watch-12\public\files
 
     /**
      * @return void
      * @throws FilmsRepositoryException
      */
-    public function handle(): void
+    public function handle(FilmsRepository $repository): void
     {
-        file_put_contents($this->check_file, "\r\ndata: ".date("Y-m-d H:i:s"),
-            FILE_APPEND | LOCK_EX);
+//        file_put_contents($this->check_file, "\r\ndata: ".date("Y-m-d H:i:s"));
+            //FILE_APPEND | LOCK_EX);
 //        return;
 
         // Получение информации
-        $client = new Client();
-        $repository = new OmdbFilmRepository($client);
+//        $client = new Client();
+//        $repository = new OmdbFilmRepository($client);
         $service = new OmdbFilmService($repository);
 
         $data = $service->requestFilm($this->film->imdb_id);//'tt0031382');
 
         if(empty($data)) {
-            file_put_contents($this->check_file, "\r\nОтсутствуют данные для обновления",
-                FILE_APPEND | LOCK_EX);
+//            file_put_contents($this->check_file, "\r\nОтсутствуют данные для обновления",
+//                FILE_APPEND | LOCK_EX);
 //            return;
             throw new FilmsRepositoryException('Отсутствуют данные для обновления');
         }
 
-        file_put_contents($this->check_file, print_r($data, 1),
-            FILE_APPEND | LOCK_EX);
+//        file_put_contents($this->check_file, print_r($data, 1),
+//            FILE_APPEND | LOCK_EX);
 
         $this->film = Film::updateOrCreate(
             ['imdb_id' => $data['imdbID'] ?? null],
@@ -63,7 +64,8 @@ class UpdateFilm implements ShouldQueue
                 'description' => $data['Plot'] ?? '',
                 'run_time' => $this->parseRuntime($data['Runtime'] ?? ''),
                 'released' => $data['Year'] ?? null,
-                'rating' => ($data['imdbRating'] === 'N/A') ? null : $data['imdbRating'],
+                'rating' => //$data['imdbRating'] ?? null,
+                    ($data['imdbRating'] === 'N/A') ? null : $data['imdbRating'],
                 'poster_image' => $data['Poster'] ?? '',
                 'director' => $data['Director'] ?? '',
                 'starring' => json_encode(explode(',', $data['Actors'])) ?? '',
