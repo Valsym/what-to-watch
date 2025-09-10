@@ -36,8 +36,8 @@ class UpdateFilm implements ShouldQueue
      */
     public function handle(FilmsRepository $repository): void
     {
-//        file_put_contents($this->check_file, "\r\ndata: ".date("Y-m-d H:i:s"));
-            //FILE_APPEND | LOCK_EX);
+//        file_put_contents($this->check_file, "\r\ndata: ".date("Y-m-d H:i:s"),
+//            FILE_APPEND | LOCK_EX);
 //        return;
 
         // Получение информации

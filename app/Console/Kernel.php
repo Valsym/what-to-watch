@@ -17,7 +17,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-         $schedule->job(UpdateFilm::class)->everyMinute();//daily();
+//         $schedule->job(UpdateFilm::class)->everyMinute();//daily();
 //         $schedule->job(FetchLastComments::class)->daily();
     }
 

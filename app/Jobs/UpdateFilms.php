@@ -47,8 +47,8 @@ class UpdateFilms implements ShouldQueue
 //            }
 //        });
 
-//        $films = Film::where('status', Film::STATUS_PENDING);
-        $film = Film::where('id', 1)->first();
+        $film = Film::where('status', Film::STATUS_PENDING)->first();
+//        $film = Film::where('id', 1)->first();
         UpdateFilm::dispatchSync($film);
 
 //        foreach ($films as $film) {

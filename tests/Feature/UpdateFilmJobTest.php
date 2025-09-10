@@ -89,7 +89,7 @@ class UpdateFilmJobTest extends TestCase
      *
      * @return void
      */
-    /*public function testUpdateFilmJobIsQueued(): void
+    public function testUpdateFilmJobIsQueued(): void
     {
         Queue::fake();
 
@@ -97,10 +97,10 @@ class UpdateFilmJobTest extends TestCase
             'imdb_id' => 'tt0111161',
         ]);
 
-        UpdateFilmJob::dispatch($film);
+        UpdateFilm::dispatch($film);
 
         Queue::assertPushed(UpdateFilm::class, function (UpdateFilm $job) use ($film) {
             return $job->film->is($film);
         });
-    }*/
+    }
 }
