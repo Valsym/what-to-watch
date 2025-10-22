@@ -1,13 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use App\Models\Film;
-use App\Models\Genre;
-use App\Http\Responses\Success;
-use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\Collection;
 use App\Http\Resources\GenreResource;
+use App\Http\Responses\Success;
+use App\Models\Genre;
+use Illuminate\Http\Request;
 
 class GenreController extends Controller
 {

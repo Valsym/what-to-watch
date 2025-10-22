@@ -1,16 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Http\Responses\Success;
 use App\Http\Responses\ErrorResponse;
+use App\Http\Responses\Success;
 use App\Models\FavoriteFilm;
 use App\Models\Film;
-use App\Models\Genre;
 use Illuminate\Http\Request;
-use App\Http\Resources\FilmListResource;
-use App\Http\Resources\FilmResource;
 
 class FavoriteController extends Controller
 {

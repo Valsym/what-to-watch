@@ -1,38 +1,23 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use App\Models\Film;
-use App\Http\Requests\Films\FilmsListRequest;
-use App\Models\Genre;
-use App\Services\Films\FilmListService;
-use App\Services\Films\FilmCreateService;
-use App\Services\Films\FilmService;
-use App\Services\Films\FilmUpdateService;
-use App\Support\Import\OmdbFilmsRepository000;
-use GuzzleHttp\Client;
-use Illuminate\Contracts\Support\Responsable;
-use Illuminate\Http\Request;
+use App\Http\Requests\Films\StoreFilmRequest;
 use App\Http\Requests\Films\UpdateFilmRequest;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Resources\FilmResource;
 use App\Http\Responses\Success;
+use App\Models\Film;
 use App\Repositories\Films\FilmRepository;
-use App\Http\Requests\Films\StoreFilmRequest;
+use App\Services\Films\FilmCreateService;
+use App\Services\Films\FilmListService;
+use App\Services\Films\FilmService;
+use App\Services\Films\FilmUpdateService;
+use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\RequestFactoryInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
-use Illuminate\Support\Facades\DB;
-
-use App\Support\Import\OmdbFilmRepository;
-use App\Support\Import\OmdbFilmService;
-
-use App\Jobs\UpdateFilm;
-use App\Jobs\UpdateFilms;
-use App\Support\Import\FilmsRepository;
 
 class FilmController extends Controller
 {

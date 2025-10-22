@@ -1,22 +1,18 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 
-use App\Models\Comment;
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Symfony\Component\HttpFoundation\Response;
-use App\Providers\AuthServiceProvider;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\SuccessResponse;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
-use App\Http\Responses\Success;
 use App\Http\Responses\Fail;
-use App\Services\CommentService;
+use App\Http\Responses\Success;
+use App\Models\Comment;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Symfony\Component\HttpFoundation\Response;
 
 
 class CommentController extends Controller
