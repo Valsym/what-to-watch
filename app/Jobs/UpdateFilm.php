@@ -26,7 +26,7 @@ class UpdateFilm implements ShouldQueue
     {
     }
 
-    private string $check_file = "files/check-all.txt";
+//    private string $check_file = "files/check-all.txt";
     // C:/Users/Ler2/projects/what-to-watch-12/public/
     // C:\Users\Ler2\projects\what-to-watch-12\public\files
 

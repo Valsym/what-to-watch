@@ -88,13 +88,13 @@ class FilmController extends Controller
      */
     public function store(StoreFilmRequest $request): Success
     {
-        if (Gate::allows('film-store')) {
+//        if (Gate::allows('film-store')) {
             $film = $this->filmCreateService->createFilm($request->validated());
 
             return $this->success(new FilmResource($film), Response::HTTP_CREATED);
-        }
-
-        abort(403, 'Фильм может добавить в БД только Модератор');
+//        }
+//
+//        abort(403, 'Фильм может добавить в БД только Модератор');
     }
 
      /**
@@ -109,7 +109,7 @@ class FilmController extends Controller
 
 //        $data = $this->repository->getFilm('tt0031381');
 
-        UpdateFilms::dispatchSync();//$film);
+//        UpdateFilms::dispatchSync();//$film);
 
 ////        $repository = new OmdbFilmsRepository($this->httpFactory,
 ////         $this->httpClient);

@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+//use App\Interfaces\FilmsOmdbRepositoryInterface;
 use App\Models\Comment;
 use App\Models\User;
+//use App\Repositories\Films\FilmsOmdbRepository;
+use App\Support\Import\FilmsRepository;
+use App\Support\Import\TvmazeRepository;
 use Illuminate\Support\Facades\Gate;
 //use Illuminate\Support\ServiceProvider;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -26,7 +30,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+//        $this->app->bind(FilmsRepository::class, TvmazeRepository::class);
+//
+//        $this->app->bind(
+//            ClientInterface::class,
+//            function () {
+//                return new GuzzleAdapter(new Client());
+//            }
+//        );
     }
 
     /**

@@ -3,6 +3,7 @@ namespace App\Support\Import;
 
 use \GuzzleHttp\Psr7\HttpFactory;
 use Exception;
+use Illuminate\Support\Facades\Http;
 
 class OmdbFilmRepository implements FilmsRepository
 {
@@ -31,5 +32,11 @@ class OmdbFilmRepository implements FilmsRepository
             "$url?i=$imdbId&apikey=$apiKey");
 
     }
+
+//    private function api(string $path, array $params = [])
+//    {
+//        return
+//            Http::baseUrl(config("services.tvmaze.url"))->get($path, $params);
+//    }
 
 }

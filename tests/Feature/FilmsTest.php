@@ -135,18 +135,6 @@ class FilmsTest extends TestCase
     }
 
     /**
-     * Проверка попытки
-     * @return void
-     */
-    public function testCreateFilmRoute()
-    {
-        $this->markTestSkipped('Требуется авторизация');
-        $response = $this->postJson(route('film.store'));
-
-        $response->assertStatus(201);
-    }
-
-    /**
      * Тест ошибки 401 при попытке добавить фильм неавторизованным пользователем.
      */
     public function testStoreFilmUnauthenticated(): void
@@ -157,8 +145,8 @@ class FilmsTest extends TestCase
             ]);
 
         $response->assertUnauthorized()->assertJson([
-            'message' => 'Unauthenticated.',
-//            'message' => 'Запрос требует аутентификации.',
+//            'message' => 'Forbidden',
+            'message' => 'Запрос требует аутентификации',
         ]);
     }
 
@@ -190,7 +178,7 @@ class FilmsTest extends TestCase
      *
      * @return void
      */
-    public function testStoreFilm(): void
+    public function testStoreFilmAsModerator(): void
     {
         $moderator =
             User::factory()->create([
@@ -221,7 +209,7 @@ class FilmsTest extends TestCase
                 "genre",
                 "released",
                 "is_favorite",
-                "is_promo",
+                "promo",
             ]
         ]);
     }
@@ -274,7 +262,7 @@ class FilmsTest extends TestCase
 
         $response->assertStatus(404);
 //        $response->assertJsonStructure(['message', 'errors' => ['exception']]);
-        $response->assertJsonFragment(['message' => 'Страница не найдена']);
+        $response->assertJsonFragment(['message' => 'Запрашиваемая страница не существует']);
     }
 
     /**

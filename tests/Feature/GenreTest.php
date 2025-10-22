@@ -76,7 +76,7 @@ class GenreTest extends TestCase
 
         $response->assertUnauthorized()
             ->assertJson([
-                'message' => 'Unauthenticated.',
+                'message' => 'Запрос требует аутентификации',
             ]);
     }
 
@@ -95,7 +95,7 @@ class GenreTest extends TestCase
             'name' => 'Action',
         ]);
 
-        $response->assertForbidden();
+        $response->assertForbidden();;
     }
 
     /**

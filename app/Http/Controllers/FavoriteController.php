@@ -128,12 +128,16 @@ class FavoriteController extends Controller
      */
     public function destroy($filmId)
     {
+//        dump($this->show($filmId));
+
         if($this->show($filmId)->statusCode !== 200) {
             return $this->success(['message' =>
                 'Фильм уже отсутствует в избранном'], 201);
         }
 
-        FavoriteFilm::destroy($filmId);
+        $favoriteFilm = FavoriteFilm::where('film_id', $filmId)->first();
+        $favoriteFilm->delete();
+//        FavoriteFilm::destroy($favoriteFilm->id);
 
         if($this->show($filmId)->statusCode !== 200) {
             return $this->success(['message' =>

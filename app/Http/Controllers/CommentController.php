@@ -26,9 +26,11 @@ class CommentController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(int $filmId)
     {
-        return $this->success([]);
+        $comments = Comment::where('film_id', $filmId)->get();
+
+        return $this->success($comments, 201);
     }
 
     /**

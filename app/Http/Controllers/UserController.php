@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\UserRequest;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -42,14 +43,14 @@ class UserController extends Controller
      */
     public function update(UserRequest $request): Success
     {
-        $params = $request->safe()->except('file');
+        $params = $request->safe()->except('avatar');
         $user = Auth::user();
         $path = false;
 
-        if($request->hasFile('file')) {
+        if($request->hasFile('avatar')) {
             $oldFile = $user->avatar;
-            $result = $request->file('file')->store('avatars', 'public');
-            $path = $result ? $request->file('file')->hashName() : false;
+            $result = $request->file('avatar')->store('avatars', 'public');
+            $path = $result ? $request->file('avatar')->hashName() : false;
             $params['avatar'] = $path;
         }
 
@@ -60,7 +61,8 @@ class UserController extends Controller
 //        ]);
         $user->update($params);
 
-        if($path) {
+        // Безопасное удаление старого файла
+        if($path && !empty($oldFile)) {
             Storage::disk('public')->delete($oldFile);
         }
 

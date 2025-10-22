@@ -52,7 +52,7 @@ class UserTest extends TestCase
         $response = $this->getJson(route('user.show', 0),[]);
 
         $response->assertStatus(401);
-        $response->assertJsonFragment(['message' => 'Unauthenticated.']);
+        $response->assertJsonFragment(['message' => 'Запрос требует аутентификации']);
     }
 
     /**
@@ -63,7 +63,7 @@ class UserTest extends TestCase
         $response = $this->patchJson(route('user.update'), []);
 
         $response->assertStatus(401);
-        $response->assertJsonFragment(['message' => 'Unauthenticated.']);//'Запрос требует аутентификации.']);
+        $response->assertJsonFragment(['message' => 'Запрос требует аутентификации']);
     }
 
     /**
@@ -129,7 +129,7 @@ class UserTest extends TestCase
     /**
      * Проверка вызова метода обновления профиля с изменением email адреса и загрузкой аватара.
      */
-    public function testUpdateUser0() // тест не проходит
+    public function testUpdateUserWithAvatar()
     {
         Storage::fake('public');
 
@@ -147,7 +147,8 @@ class UserTest extends TestCase
             'avatar' => $file
         ];
 
-        $response = $this->patchJson(route('user.update', $params));
+//        $response = $this->patchJson(route('user.update', $params));
+        $response = $this->patchJson(route('user.update'), $params); // ← Уберите параметры из route()
 
         $response->assertJsonFragment([
             'name' => $newUser->name,

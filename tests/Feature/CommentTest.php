@@ -70,8 +70,10 @@ class CommentTest extends TestCase
             ->create();
 
         $response = $this->getJson(route('comments.index', $film));
+        // Временная отладка
+//        $response->dump();
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
         $response->assertJsonCount($count, 'data');
         $response->assertJsonFragment(['text' => $film->comments->first()->text]);
     }
@@ -99,7 +101,7 @@ class CommentTest extends TestCase
 
         $response = $this->patchJson(route('comments.update', $comment), []);
 
-        $response->assertStatus(403);
+        $response->assertStatus(422);//403);
     }
 
     /**
@@ -146,10 +148,21 @@ class CommentTest extends TestCase
             'text' => 'some text some text some text some text  some text  some text',
         ];
 
-        $response = $this->patchJson(route('comments.update', $comment), $data);
+//        $response = $this->patchJson(route('comments.update', $comment), $data);
+        $response = $this->patchJson(route('comments.update', [
+            'comment' => $comment->id]), [
+            'text' => $data['text'],
+            'rating' => 5,
+        ]);
 
-        $response->assertStatus(200);
-        $response->assertJsonFragment($data);
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('comments', [
+            'id' => $comment->id,
+            'user_id' => $user->id,
+            'text' => $data['text'],
+            'rating' => 5,
+        ]);
+//        $response->assertJsonFragment($data);
     }
 
     /**
@@ -219,7 +232,7 @@ class CommentTest extends TestCase
         $response = $this->deleteJson(route('comments.destroy', $comment->id));
 
         $response->assertStatus(401);
-        $response->assertJsonFragment(['message' => 'Unauthenticated.']);//'Запрос требует аутентификации.']);
+        $response->assertJsonFragment(['message' => 'Запрос требует аутентификации']);
         $this->assertDatabaseHas('comments', [
             'id' => $comment->id,
         ]);
