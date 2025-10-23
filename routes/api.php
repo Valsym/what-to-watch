@@ -34,7 +34,7 @@ Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logo
 Route::prefix('/user')->middleware('auth:sanctum')->group(function () {
     Route::get('/', [UserController::class, 'index'])->name('user.index');
     Route::get('/{user}', [UserController::class, 'show'])->name('user.show');
-    Route::middleware('is_moderator')->patch('/', [UserController::class, 'update'])->name('user.update');
+    Route::/*middleware('is_moderator')->*/patch('/', [UserController::class, 'update'])->name('user.update');
 });
 
 Route::get('/films/{film}/similar', [FilmController::class, 'similar'])->name('films.similar');

@@ -3,6 +3,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Film;
 use App\Models\Genre;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
@@ -82,13 +83,19 @@ class UserTest extends TestCase
      */
     public function testUpdateUserWithoutUpdateEmail()
     {
+//        $moderator = User::factory()->create([
+//            'role' => User::ROLE_MODERATOR,
+//        ]);
+
         $user = User::factory()->create();
         $new = User::factory()->make();
-        Sanctum::actingAs($user);
+//        Sanctum::actingAs($user);
 
         $params = ['email' => $user->email, 'name' => $new->name];
 
-        $response = $this->patchJson(route('user.update', $params));
+        $response = $this->actingAs($user)->patchJson(route('user.update', $params));
+// debug
+//        $response->dump();
 
         $response->assertOk()
             ->assertJsonStructure([

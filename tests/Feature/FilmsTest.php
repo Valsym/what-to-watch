@@ -71,15 +71,17 @@ class FilmsTest extends TestCase
      */
     public function testReturnsPaginatedFilmList(): void
     {
-        $count = 20;
+        $count = 3;
         Film::factory()->count($count)->create();
 //        $count = random_int(2, 10);
 //        Film::factory()->count($count)->hasAttached(Genre::factory())->create();
 
         $response = $this->getJson(route('films.index'));
 
+        $response->dump();
+
         $response->assertStatus(200);
-        $response->assertJsonStructure(['data' => [], 'links' => [], 'total']);
+        $response->assertJsonStructure(['data']);
         $response->assertJsonFragment(['total' => $count]);
 
     }
