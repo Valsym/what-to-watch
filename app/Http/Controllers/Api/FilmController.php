@@ -37,7 +37,7 @@ class FilmController extends Controller
     /**
      * Получение списка фильмов.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(Request $request)//(FilmsListRequest $request)
     {
@@ -57,10 +57,11 @@ class FilmController extends Controller
                     $query->whereStatus(Film::STATUS_READY);
                 }
             )
-            ->ordered($request->get('order_by'), $request->get('order_to'))
-            ->paginate($perPage);
+            ->ordered($request->get('order_by'), $request->get('order_to'));
+//            ->paginate($perPage);
 
-        return $films;
+//        return $films;
+        return FilmResource::collection($films->paginate($perPage));
     }
 
     /**

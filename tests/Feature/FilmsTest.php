@@ -27,8 +27,35 @@ class FilmsTest extends TestCase
         $response = $this->getJson(route('films.index'));
 
         $response->assertStatus(200);
-        $response->assertJsonStructure(['data' => [], 'links' => [], 'total']);
-        $response->assertJsonFragment(['total' => $count]);
+//        $response->assertJsonStructure(['data' => [], 'links' => [], 'total']);
+//        $response->assertJsonFragment(['total' => $count]);
+//
+//        $response->assertJsonCount($count, 'data');
+        $response->assertJsonStructure([
+            'data' => [
+                '*' => [
+                    'id',
+                    'name',
+                    'poster_image',
+                    'preview_image',
+                    'background_image',
+                    'background_color',
+                    'video_link',
+                    'preview_video_link',
+                    'description',
+                    'director',
+                    'starring',
+                    'run_time',
+                    'released',
+                    'promo',
+                    'status',
+                    'imdb_id',
+                    'created_at',
+                    'updated_at',
+                ]
+            ]
+        ]);
+        $response->assertJsonCount($count > 8 ? 8 : $count, 'data');
     }
 
     /**
