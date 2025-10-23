@@ -73,9 +73,14 @@ class CommentTest extends TestCase
         // Временная отладка
 //        $response->dump();
 
-        $response->assertStatus(201);
+        $response->assertStatus(200);
         $response->assertJsonCount($count, 'data');
         $response->assertJsonFragment(['text' => $film->comments->first()->text]);
+        $response->assertJsonStructure([
+            'data' => [
+                '*' => ['id', 'text', 'user_id', 'film_id', 'rating', 'created_at']
+            ]
+        ]);
     }
 
     /**

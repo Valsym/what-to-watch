@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\SuccessResponse;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
+use App\Http\Resources\CommentResource;
 use App\Http\Responses\Fail;
 use App\Http\Responses\Success;
 use App\Models\Comment;
@@ -26,7 +27,8 @@ class CommentController extends Controller
     {
         $comments = Comment::where('film_id', $filmId)->get();
 
-        return $this->success($comments, 201);
+//        return $this->success($comments, 201);
+        return CommentResource::collection($comments);
     }
 
     /**

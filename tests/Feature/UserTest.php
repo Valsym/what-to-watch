@@ -29,7 +29,7 @@ class UserTest extends TestCase
         User::factory()->count($count)->create();
         Sanctum::actingAs($user);
         $response = $this->getJson(route('user.index'));
-        $response->dump();
+//        $response->dump();
 
         $response->assertStatus(200);
         $response->assertJsonStructure(['data']);
