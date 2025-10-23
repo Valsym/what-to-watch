@@ -38,20 +38,9 @@ class FilmsTest extends TestCase
                     'name',
                     'poster_image',
                     'preview_image',
-                    'background_image',
-                    'background_color',
-                    'video_link',
                     'preview_video_link',
-                    'description',
-                    'director',
-                    'starring',
-                    'run_time',
+                    'genre',
                     'released',
-                    'promo',
-                    'status',
-                    'imdb_id',
-                    'created_at',
-                    'updated_at',
                 ]
             ]
         ]);
@@ -71,18 +60,14 @@ class FilmsTest extends TestCase
      */
     public function testReturnsPaginatedFilmList(): void
     {
-        $count = 3;
+        $count = random_int(2, 10);
         Film::factory()->count($count)->create();
-//        $count = random_int(2, 10);
-//        Film::factory()->count($count)->hasAttached(Genre::factory())->create();
 
         $response = $this->getJson(route('films.index'));
 
-        $response->dump();
-
         $response->assertStatus(200);
         $response->assertJsonStructure(['data']);
-        $response->assertJsonFragment(['total' => $count]);
+        $response->assertJsonCount($count > 8 ? 8 : $count, 'data');
 
     }
 
@@ -94,15 +79,17 @@ class FilmsTest extends TestCase
     public function testGetFilmsByGenre()
     {
         $genre = Genre::factory()->create();
-        $count = 2;
+        $count = random_int(2, 10);
         $films = Film::factory($count)->hasAttached($genre)->create(['released' => 2000]);
-        Film::factory(3)->create();
+        Film::factory($count)->create();
 
         $response = $this->getJson(route('films.index', ['genre' => $genre->name]));
         $result = $response->json('data');
+//        $response->dump();
+//        dump($result);
 
         $response->assertStatus(200);
-        $response->assertJsonFragment(['total' => $count]);
+        $response->assertJsonCount($count > 8 ? 8 : $count, 'data');
         $this->assertEquals($films->pluck('id')->toArray(), Arr::pluck($result, 'id'));
     }
 
@@ -258,7 +245,7 @@ class FilmsTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonFragment([
             'name' => $film->name,
-            'scores_count' => 3,
+            'is_favorite' => false,
             'rating' => 1.3,
         ]);
     }

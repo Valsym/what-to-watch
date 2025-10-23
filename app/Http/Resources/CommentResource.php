@@ -19,7 +19,7 @@ class CommentResource extends JsonResource
         return [
             'id' => $this->id,
             'text' => $this->text,
-//            'author' => new UserResource($this->whenLoaded('user')),
+            'author' => new UserResource($this->whenLoaded('user')),
             'film_id' => $this->film_id,
             'rating' => $this->rating,
             'parent_id' => $this->parent_id,

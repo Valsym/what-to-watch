@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Resources\FilmListResource;
+use App\Http\Resources\FilmResource;
 use App\Http\Responses\ErrorResponse;
 use App\Http\Responses\Success;
 use App\Models\FavoriteFilm;
 use App\Models\Film;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class FavoriteController extends Controller
 {
@@ -18,37 +20,22 @@ class FavoriteController extends Controller
      */
     public function index()
     {
-        $userId = auth()->id();
         $perPage = 8;
 
-        $ff = FavoriteFilm::where('user_id', $userId)->
-            with('film'
-//                ['film' => function ($query) {
-//            $query->with(
-//                [
-//                    'genres:genres.id,genres.name',
-////                    'actors:actors.id,actors.name',
-////                    'directors:directors.id,directors.name',
-//                ]
-//            );
-//        }]
-        )->latest()->paginate($perPage);//->get();
+        $favorites = FavoriteFilm::where('user_id', auth()->id())->
+            with('film')->latest()->paginate($perPage);
 
-//        $items = collect($ff->items());
-//        $formatted = $items->map(
-//            function ($favorite) {
-//                $film = $favorite->film;
-//                $film->is_favorite = true;
-//                $film->added_at = $favorite->created_at->format('Y-m-d H:i:s');
-//                return new filmResource($film);
-//            }
-//        );
-//
-//        return $this->success(FilmListResource::collection($formatted));
+        $items = collect($favorites->items());
+        $formatted = $items->map(
+            function ($favorite) {
+                $film = $favorite->film;
+                $film->is_favorite = true;
+                $film->added_at = $favorite->created_at->format('Y-m-d H:i:s');
+                return new filmResource($film);
+            }
+        );
 
-//        return $this->success($ff);
-//        dd($ff);//FilmListResource::collection($ff));
-        return $this->success(FilmListResource::collection($ff));
+        return $this->success(FilmListResource::collection($formatted));
     }
 
     /**
@@ -70,10 +57,10 @@ class FavoriteController extends Controller
 
         $userId = auth()->id();
 
-        $ff = new FavoriteFilm();
-        $ff->user_id = $userId;
-        $ff->film_id = $filmId;
-        $ff->save();
+        $favorite = new FavoriteFilm();
+        $favorite->user_id = $userId;
+        $favorite->film_id = $filmId;
+        $favorite->save();
         // or
 //        FavoriteFilm::create(
 //            [
@@ -100,8 +87,6 @@ class FavoriteController extends Controller
             return $this->success(['message' => 'Фильм найден в избранном'], 200);
         }
 
-//        return $this->ErrorResponse([], 400);
-//        return $this->ErrorResponse('Фильм не найден', [], 404);
         return $this->error('Фильм не найден в избранном', [], 404);
     }
 
