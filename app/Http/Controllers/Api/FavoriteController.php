@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Resources\FilmListResource;
 use App\Http\Responses\ErrorResponse;
 use App\Http\Responses\Success;
 use App\Models\FavoriteFilm;
@@ -13,7 +14,7 @@ class FavoriteController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Success
      */
     public function index()
     {
@@ -45,9 +46,9 @@ class FavoriteController extends Controller
 //
 //        return $this->success(FilmListResource::collection($formatted));
 
-        return $this->success($ff);
+//        return $this->success($ff);
 //        dd($ff);//FilmListResource::collection($ff));
-//        return $this->success(FilmListResource::collection($ff));
+        return $this->success(FilmListResource::collection($ff));
     }
 
     /**
