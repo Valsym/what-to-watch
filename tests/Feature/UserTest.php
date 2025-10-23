@@ -3,6 +3,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Genre;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Sanctum\Sanctum;
@@ -17,14 +18,23 @@ class UserTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * A basic feature test example.
+     * Тест: Получение списка пользователей
+     *
+     * @return void
      */
-//    public function test_example(): void
-//    {
-//        $response = $this->get('/');
-//
-//        $response->assertStatus(200);
-//    }
+    public function testGetUserList()
+    {
+        $user = User::factory()->create();
+        $count = random_int(5, 10);
+        User::factory()->count($count)->create();
+        Sanctum::actingAs($user);
+        $response = $this->getJson(route('user.index'));
+        $response->dump();
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure(['data']);
+        $response->assertJsonCount($count + 1, 'data');
+    }
 
     /**
      * Проверить Получение профиля пользователя [GET /api/user]

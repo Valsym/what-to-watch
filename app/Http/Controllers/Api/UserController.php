@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\UserRequest;
+use App\Http\Resources\GenreResource;
+use App\Http\Resources\UserResource;
 use App\Http\Responses\Success;
+use App\Models\Genre;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -12,11 +16,13 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Success
      */
     public function index()
     {
-        return $this->success([]);
+        $users = User::all();
+
+        return $this->success(UserResource::collection($users));
     }
 
 
@@ -24,9 +30,9 @@ class UserController extends Controller
      * Display the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return Success
      */
-    public function show(int $id)
+    public function show(int $id): Success
     {
         return $this->success(Auth::user());
     }
@@ -72,9 +78,9 @@ class UserController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return Success
      */
-    public function destroy($id)
+    public function destroy($id): Success
     {
         return $this->success([]);
     }
