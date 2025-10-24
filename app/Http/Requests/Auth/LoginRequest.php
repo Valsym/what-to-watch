@@ -1,16 +1,24 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
 
 final class LoginRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * Сообщения об ошибках валидации.
+     *
+     * @return array[]
+     */
     public function rules(): array
     {
         return [

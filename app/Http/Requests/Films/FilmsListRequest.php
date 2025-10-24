@@ -17,7 +17,6 @@ class FilmsListRequest extends FormRequest
      * Правила доступа регулируются миддлварами и гейтами в роутах
      *
      * @return bool
-     * @psalm-suppress PossiblyUnusedMethod
      */
     public function authorize(): bool
     {
@@ -27,8 +26,7 @@ class FilmsListRequest extends FormRequest
     /**
      * Правила валидации входящих данных.
      *
-     * @return array<string, ValidationRule|array|string>
-     * @psalm-suppress PossiblyUnusedMethod
+     * @return array[]
      */
     public function rules(): array
     {
@@ -36,7 +34,7 @@ class FilmsListRequest extends FormRequest
             'page' => ['sometimes', 'integer', 'min:1'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'genre' => ['sometimes', 'string'],
-            'status' => ['sometimes', 'string', 'in:pending,on moderation,ready'],
+            'status' => ['sometimes', 'string', 'in:pending,moderate,ready'],
             'order_by' => ['sometimes', 'string', 'in:released,rating'],
             'order_to' => ['sometimes', 'string', 'in:asc,desc'],
             'search' => ['sometimes', 'string'],

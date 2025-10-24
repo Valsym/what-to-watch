@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Api\Controller;
-use App\Http\Requests\LoginRequest;
-use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
-
 //use App\Services\AuthService;
 
 class AuthController extends Controller
@@ -15,7 +15,7 @@ class AuthController extends Controller
     /**
      * Регистрация юзера
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function register(RegisterRequest $request)
     {
@@ -29,6 +29,12 @@ class AuthController extends Controller
         ], 201);
     }
 
+    /**
+     * Сообщения об ошибках валидации.
+     *
+     * @param LoginRequest $request
+     * @return \App\Http\Responses\Success
+     */
         public function login(LoginRequest $request)
     {
         if (!Auth::attempt($request->validated())) {
@@ -45,8 +51,9 @@ class AuthController extends Controller
     /**
      * logout
      *
-     * @return \Illuminate\Http\Response
+     * @return \App\Http\Responses\Success
      */
+
     public function logout()
     {
         $user = Auth::user();

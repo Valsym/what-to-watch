@@ -107,7 +107,7 @@ class CommentTest extends TestCase
 
         $response = $this->patchJson(route('comments.update', $comment), []);
 
-        $response->assertStatus(422);//403);
+        $response->assertStatus(403);
     }
 
     /**

@@ -1,15 +1,14 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Auth;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use Auth;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-//use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
+use Illuminate\Validation\Rules\Password;
 
-class UserRequest extends FormRequest
+class RegisterRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,11 +20,16 @@ class UserRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Сообщения об ошибках валидации.
+     *
+     * @return array
+     */
     public  function rules(): array
     {
 
         $rules = [
-            'name' => 'required|string|max:255',
+            'name' => 'string|max:255',
             'email' => [
                 'required',
                 'string',
@@ -34,17 +38,14 @@ class UserRequest extends FormRequest
                 $this->getUniqRule(),
             ],
             'password' => [
+                'required',
                 'string',
-                'min:8'
+                Password::min(8)
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols()
             ],
-            'password_confirmation' => [
-                $this->getPasswordRequiredRule(),
-                'string',
-                'min:8'
-            ],
-//            'avatar' => 'nullable|file|image|max:10240',
-//            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg|max:10240'
-            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg|max:10240'
+            'file' => 'nullable|file|image|max:10240',
         ];
 
         return $rules;

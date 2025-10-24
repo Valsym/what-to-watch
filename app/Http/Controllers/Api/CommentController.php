@@ -2,20 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
-
-use App\Http\Controllers\SuccessResponse;
-use App\Http\Requests\StoreCommentRequest;
-use App\Http\Requests\UpdateCommentRequest;
+use App\Http\Requests\Comments\StoreCommentRequest;
+use App\Http\Requests\Comments\UpdateCommentRequest;
 use App\Http\Resources\CommentResource;
 use App\Http\Responses\Fail;
 use App\Http\Responses\Success;
 use App\Models\Comment;
-use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
-
 
 class CommentController extends Controller
 {
@@ -45,12 +41,6 @@ class CommentController extends Controller
      */
     public function store(StoreCommentRequest $request, $filmId): Success
     {
-//        $comment = Comment::create([
-//            'user_id' => Auth::user()->id,//auth()->id(),
-//            'film_id' => $filmId,
-//            'text' => $request->text,
-//            'rating' => $request->rating,
-//        ]);
         $comment = Comment::create([
             'film_id' => $filmId,
             'user_id' => auth()->id(),
@@ -63,7 +53,6 @@ class CommentController extends Controller
 
         return $this->success(new CommentResource($comment), 201);
 //        return $this->success($comment, 201);
-//        return $this->success(CommentResource::collection($comment));
     }
 
 
@@ -74,7 +63,7 @@ class CommentController extends Controller
      * @param  int  $id
      * @return Success
      */
-    public function update(StoreCommentRequest $request, $id): Success
+    public function update(UpdateCommentRequest $request, $id): Success
     {
         $user = Auth::user();
         $comment = Comment::find($id)->first();
