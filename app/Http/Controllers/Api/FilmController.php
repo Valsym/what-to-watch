@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Requests\Films\FilmsListRequest;
 use App\Http\Requests\Films\StoreFilmRequest;
 use App\Http\Requests\Films\UpdateFilmRequest;
 use App\Http\Resources\FilmListResource;
@@ -40,7 +41,7 @@ class FilmController extends Controller
      *
      * @return Success
      */
-    public function index(Request $request)//(FilmsListRequest $request)
+    public function index(FilmsListRequest $request)
     {
         $perPage = $request['per_page'] ?? 8;
 

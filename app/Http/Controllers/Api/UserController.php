@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Requests\UserRequest;
-use App\Http\Resources\GenreResource;
+use App\Http\Requests\User\UserRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Responses\Success;
-use App\Models\Genre;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;

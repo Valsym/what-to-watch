@@ -4,7 +4,6 @@ namespace App\Http\Requests\Films;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Override;
 
 /**
  * Класс запроса для создания нового фильма.
@@ -15,10 +14,9 @@ class StoreFilmRequest extends FormRequest
 {
     /**
      * Разрешает всем пользователям делать данный запрос.
-     * Правила доступа регулируются миддлварами и гейтами в роутах
+     *  Правила доступа регулируются миддлварами и гейтами в роутах
      *
      * @return bool
-     * @psalm-suppress PossiblyUnusedMethod
      */
     public function authorize(): bool
     {
@@ -28,8 +26,7 @@ class StoreFilmRequest extends FormRequest
     /**
      * Правила валидации входящих данных.
      *
-     * @return array<string, ValidationRule|array|string>
-     * @psalm-suppress PossiblyUnusedMethod
+     * @return array[]
      */
     public function rules(): array
     {
@@ -40,8 +37,9 @@ class StoreFilmRequest extends FormRequest
 
     /**
      * Подготовка данных перед валидацией.
+     *
+     * @return void
      */
-    #[Override]
     protected function prepareForValidation(): void
     {
         $this->replace([
@@ -51,8 +49,11 @@ class StoreFilmRequest extends FormRequest
 
     /**
      * Возвращаем только разрешенные данные.
+     *
+     * @param $key
+     * @param $default
+     * @return array
      */
-    #[Override]
     public function validated($key = null, $default = null): array
     {
         return [
@@ -63,8 +64,9 @@ class StoreFilmRequest extends FormRequest
 
     /**
      * Сообщения об ошибках валидации.
+     *
+     * @return string[]
      */
-    #[Override]
     public function messages(): array
     {
         return [

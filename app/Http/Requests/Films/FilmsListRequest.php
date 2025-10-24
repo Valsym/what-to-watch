@@ -17,7 +17,6 @@ class FilmsListRequest extends FormRequest
      * Правила доступа регулируются миддлварами и гейтами в роутах
      *
      * @return bool
-     * @psalm-suppress PossiblyUnusedMethod
      */
     public function authorize(): bool
     {
@@ -27,8 +26,7 @@ class FilmsListRequest extends FormRequest
     /**
      * Правила валидации входящих данных.
      *
-     * @return array<string, ValidationRule|array|string>
-     * @psalm-suppress PossiblyUnusedMethod
+     * @return array[]
      */
     public function rules(): array
     {

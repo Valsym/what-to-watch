@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\User;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
+
 //use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 
 class UserRequest extends FormRequest
 {
@@ -35,16 +36,18 @@ class UserRequest extends FormRequest
             ],
             'password' => [
                 'string',
-                'min:8'
+                'min:8',
+//                Password::min(8)
+//                    ->mixedCase()
+//                    ->numbers()
+//                    ->symbols()
             ],
             'password_confirmation' => [
                 $this->getPasswordRequiredRule(),
                 'string',
                 'min:8'
             ],
-//            'avatar' => 'nullable|file|image|max:10240',
-//            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg|max:10240'
-            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg|max:10240'
+            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg|max:1024'
         ];
 
         return $rules;

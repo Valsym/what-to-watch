@@ -1,13 +1,12 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Auth;
 
 use App\Models\User;
 use Auth;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-//use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
+use Illuminate\Validation\Rules\Password;
 
 class RegisterRequest extends FormRequest
 {
@@ -21,6 +20,11 @@ class RegisterRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Сообщения об ошибках валидации.
+     *
+     * @return array
+     */
     public  function rules(): array
     {
 
@@ -36,7 +40,10 @@ class RegisterRequest extends FormRequest
             'password' => [
                 'required',
                 'string',
-                'min:8'
+                Password::min(8)
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols()
             ],
             'file' => 'nullable|file|image|max:10240',
         ];
