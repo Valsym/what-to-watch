@@ -46,7 +46,8 @@ class CommentTest extends TestCase
         $film = Film::factory()->create();
         $comment = Comment::factory()->make();
 
-        $response = $this->postJson(route('comments.store', $film), $comment->toArray());
+        $response = $this->postJson(route('comments.store', $film->id), $comment->toArray());
+//        $response->dd();
 
         $response->assertStatus(201);
 
@@ -61,7 +62,7 @@ class CommentTest extends TestCase
     /**
      * Получение списка комментариев.
      */
-    public function testGetFilmCommentsRoute() // тест не проходит
+    public function testGetFilmCommentsRoute()
     {
         $count = random_int(2, 10);
 
@@ -73,9 +74,14 @@ class CommentTest extends TestCase
         // Временная отладка
 //        $response->dump();
 
-        $response->assertStatus(201);
+        $response->assertStatus(200);
         $response->assertJsonCount($count, 'data');
         $response->assertJsonFragment(['text' => $film->comments->first()->text]);
+        $response->assertJsonStructure([
+            'data' => [
+                '*' => ['id', 'text', 'user_id', 'film_id', 'rating', 'created_at']
+            ]
+        ]);
     }
 
     /**
@@ -93,7 +99,7 @@ class CommentTest extends TestCase
     /**
      * Попытка редактирования комментария пользователем не автором комментария.
      */
-    public function testUpdateCommentByCommonUser() // тест не проходит
+    public function testUpdateCommentByCommonUser()
     {
         Sanctum::actingAs(User::factory()->create());
 
@@ -121,45 +127,40 @@ class CommentTest extends TestCase
 
         $newText = 'Test comment Test comment Test comment Test comment';
 
-        $response = $this->patchJson(route('comments.update', ['comment' => $comment->id]), [
+        $response = $this->patchJson(route('comments.update', ['comment' => $comment->id]),
+            [
             'text' => $newText,
-        ]);
+            ]
+        );
 
         $response->assertStatus(403);
-//        $this->assertDatabaseHas('comments', [
-//            'id' => $comment->id,
-//            'user_id' => $anotherUser->id,
-//            'text' => $comment->text,
-//            'rating' => $comment->rate,
-//        ]);
+
     }
 
     /**
      * Успешное редактирование комментария автором.
      */
-    public function testUpdateCommentByAthor() // не прошел
+    public function testUpdateCommentByAthor()
     {
         $user = User::factory()->create();
         Sanctum::actingAs($user);
 
         $comment = Comment::factory()->for($user)->create();
 
-        $data = [
-            'text' => 'some text some text some text some text  some text  some text',
-        ];
+        $newText = 'some text some text some text some text  some text  some text';
 
-//        $response = $this->patchJson(route('comments.update', $comment), $data);
-        $response = $this->patchJson(route('comments.update', [
-            'comment' => $comment->id]), [
-            'text' => $data['text'],
+        $response = $this->patchJson(route('comments.update', ['comment' => $comment->id]),
+            [
+            'text' => $newText,
             'rating' => 5,
         ]);
+//        $response->dump();
 
-        $response->assertStatus(201);
+        $response->assertStatus(200);
         $this->assertDatabaseHas('comments', [
             'id' => $comment->id,
             'user_id' => $user->id,
-            'text' => $data['text'],
+            'text' => $newText,
             'rating' => 5,
         ]);
 //        $response->assertJsonFragment($data);
@@ -185,7 +186,7 @@ class CommentTest extends TestCase
             'rating' => 5,
         ]);
 
-        $response->assertStatus(201);
+        $response->assertStatus(200);
         $this->assertDatabaseHas('comments', [
             'id' => $comment->id,
             'user_id' => $user->id,
@@ -210,13 +211,12 @@ class CommentTest extends TestCase
             'rating' => 7,
         ];
 
-        $response = $this->patchJson(route('comments.update', $comment), $data);
+        $response = $this->patchJson(route('comments.update', $comment->id), $data);
 
-        $response->assertStatus(201);
-//        $response->assertJsonFragment($data);
+        $response->assertStatus(200);
+
         $this->assertDatabaseHas('comments', [
             'id' => $comment->id,
-//            'user_id' => $user->id,
             'text' => $newText,
             'rating' => 7,
         ]);
@@ -269,7 +269,6 @@ class CommentTest extends TestCase
 
         $response->assertStatus(403);
         $response->assertJsonFragment(['message' => 'Нельзя удалить комментарий с ответами']);
-        //'Неавторизованное действие.']);
     }
 
     /**
@@ -305,5 +304,26 @@ class CommentTest extends TestCase
         $response->assertStatus(204);
         $this->assertDatabaseCount('comments', 0);
     }
+
+    /**
+     * тесты для новой структуры Resource
+     *
+     * @return void
+     */
+//    public function testCommentResourceStructure()
+//    {
+//        $comment = Comment::factory()->withUser()->create();
+//
+//        $resource = new CommentResource($comment);
+//
+//        $response = $resource->response()->getData(true);
+//
+//        $this->assertArrayHasKey('id', $response);
+//        $this->assertArrayHasKey('text', $response);
+//        $this->assertArrayHasKey('author', $response);
+//        $this->assertArrayHasKey('film_id', $response);
+//        $this->assertArrayHasKey('rating', $response);
+//        $this->assertArrayHasKey('created_at', $response);
+//    }
 
 }

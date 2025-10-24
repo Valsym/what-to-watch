@@ -70,6 +70,10 @@ class FilmResource extends JsonResource
                 false
             ),
             'promo' => $this->promo === true,
+            'status' => $this->status,
+            'imdb_id' => $this->imdb_id,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

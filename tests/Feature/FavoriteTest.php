@@ -38,20 +38,21 @@ class FavoriteTest extends TestCase
         $response = $this->getJson(route('favorite.index'));
 
 //        $response->dump();
+
         $response->assertOk()
-            ->assertJsonStructure(['data']);
-
-
-//        $response->assertStatus(200)
-//            ->assertJsonStructure(['data' => [[
-//                'id',
-//                'name',
-//                'poster_image',
-//                'preview_image',
-//                'preview_video_link',
-//                'genre',
-//                'released'
-//            ]]]);
+            ->assertJsonStructure([
+                'data' => [
+                    '*' => [
+                        'id',
+                        'name',
+                        'poster_image',
+                        'preview_image',
+                        'preview_video_link',
+                        'genre',
+                        'released'
+                    ]
+                ]
+            ]);
 
     }
 
@@ -68,10 +69,6 @@ class FavoriteTest extends TestCase
         $response =
             $this->actingAs($user)->postJson(route('favorite.store',
                 $film->id));
-//                [
-////                'user_id' => $user->id,
-//                'film_id' => $film->id,
-//            ]);
 
         $response->assertStatus(201)
             ->assertJsonFragment(['message' => 'Фильм успешно добавлен в избранное!']);

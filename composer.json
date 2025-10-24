@@ -59,7 +59,14 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
-        ]
+        ],
+        "test:user": "sail artisan test --filter=UserTest",
+        "test:comments": "sail artisan test --filter=CommentTest",
+        "test:films": "sail artisan test --filter=FilmsTest",
+        "test:auth": "sail artisan test --filter=AuthTest",
+        "test:genre": "sail artisan test --filter=GenreTest",
+        "test:favorite": "sail artisan test --filter=FavoriteTest",
+        "test:promo": "sail artisan test --filter=PromoTest"
     },
     "extra": {
         "laravel": {

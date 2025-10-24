@@ -1,15 +1,12 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\FavoriteController;
+use App\Http\Controllers\Api\FilmController;
+use App\Http\Controllers\Api\GenreController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\FilmController;
-use App\Http\Controllers\GenreController;
-use App\Http\Controllers\FavoriteController;
-use App\Http\Controllers\CommentController;
-use App\Http\Controllers\PromoController;
-use App\Http\Middleware\CheckModerator;
 
 
 /*
@@ -23,19 +20,15 @@ use App\Http\Middleware\CheckModerator;
 |
 */
 
-//Route::post('/login', function() {
-//    $t = 4;
-//    $t++;
-//
-//    return view('welcome', [AuthController::class, 'login']);
-//});
-
 Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
 Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
-Route::middleware('auth:sanctum')->get('/user/{user}', [UserController::class, 'show'])->name('user.show');
-Route::middleware('auth:sanctum')->patch('/user', [UserController::class, 'update'])->name('user.update');
+Route::prefix('/user')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [UserController::class, 'index'])->name('user.index');
+    Route::get('/{user}', [UserController::class, 'show'])->name('user.show');
+    Route::/*middleware('is_moderator')->*/patch('/', [UserController::class, 'update'])->name('user.update');
+});
 
 Route::get('/films/{film}/similar', [FilmController::class, 'similar'])->name('films.similar');
 
@@ -51,7 +44,7 @@ Route::patch('/genres/{genre}', [GenreController::class, 'update'])->
     middleware('auth:sanctum', 'is_moderator')->//CheckModerator::class)->
     name('genre.update');
 
-Route::get('/favorite', [FavoriteController::class, 'index'])->name('favorite.index');
+Route::middleware('auth:sanctum')->get('/favorite', [FavoriteController::class, 'index'])->name('favorite.index');
 Route::middleware('auth:sanctum')->post('/films/{film}/favorite', [FavoriteController::class, 'store'])->name('favorite.store');
 Route::middleware('auth:sanctum')->delete('/films/{film}/favorite', [FavoriteController::class, 'destroy'])->name('favorite.destroy');
 Route::get ('/favorite/{film}/status', [FavoriteController::class, 'status'])->name('favorite.status');
@@ -62,26 +55,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
 });
 Route::middleware('auth:sanctum')->delete('/comments/{comment}', [CommentController::class, 'destroy'])
-    ->name('comments.destroy');//->middleware('can:comment-delete');
-;
-//Route::middleware(['auth:sanctum', 'moderator'])->delete('/comments/{comment}', [CommentController::class, 'destroy'])
-//    ->name('comments.destroy');
-// Комментарии
-//Route::prefix('/comments')->group(function () {
-//    Route::get('/{id}', [CommentController::class, 'index'])->name('comments.index');
-//    Route::middleware('auth:sanctum')->group(function () {
-//        Route::post('/{id}', [CommentController::class, 'store'])->name('comments.store');
-//        Route::patch('/{comment}', [CommentController::class, 'update'])->middleware(
-//            'can:update-comment,comment'
-//        )->name('comments.update');
-//        Route::delete('/{id}', [CommentController::class, 'destroy'])->middleware(
-//            'can:delete-comment,comment'
-//        )->name('comments.destroy');
-//    });
-//});
+    ->name('comments.destroy');
 
-//Route::post('/promo', [PromoController::class, 'store'])->name('promo.store');
-//Route::get('/promo', [FilmController::class, 'showPromo'])->name('promo.show');
 Route::prefix('/promo')->group(function () {
     Route::get('/', [FilmController::class, 'showPromo'])->name('promo.show');
     Route::post('/promo/{id}', [FilmController::class, 'createPromo'])->

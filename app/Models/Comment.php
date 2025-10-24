@@ -48,9 +48,9 @@ class Comment extends Model
 
     protected $fillable = [
         'text',
-        'author',
+//        'author',
         'rating',
-        'comment_id',
+        'parent_id',
         'user_id',
         'film_id'
     ];
