@@ -34,7 +34,8 @@ class UserController extends Controller
      */
     public function show(int $id): Success
     {
-        return $this->success(Auth::user());
+//        return $this->success(Auth::user());
+        return $this->success(new UserResource(Auth::user()));
     }
 
     /**
@@ -71,7 +72,8 @@ class UserController extends Controller
 
 //        return $this->success($user, 201);
 //        return $this->success(Auth::user()->makeVisible('email'));
-        return $this->success($user->fresh());
+//        return $this->success($user->fresh());
+        return $this->success(new UserResource($user->fresh()));
     }
 
     /**
