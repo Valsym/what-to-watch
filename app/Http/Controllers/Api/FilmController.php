@@ -59,9 +59,6 @@ class FilmController extends Controller
             ->ordered($request->get('order_by'), $request->get('order_to'));
 //            ->paginate($perPage);
 
-//        return $films;
-        $fc = FilmListResource::collection($films->paginate($perPage));
-
         return $this->success(FilmListResource::collection($films->paginate($perPage)));
     }
 

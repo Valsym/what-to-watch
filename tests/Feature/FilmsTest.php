@@ -75,23 +75,60 @@ class FilmsTest extends TestCase
      * Проверка получения списка фильмов по жанру.
      * Ожидается что будут возвращены только фильмы с указанным жанром.
      * Указываем одинаковый год выпуска для исключения изменения порядка (дефолтной сортировки).
+     * Примечание*: Запустите тест несколько раз подряд чтобы убедиться, что плавающая ошибка исчезла
+     * for i in {1..10}; do sail artisan test --filter=testGetFilmsByGenre; done
      */
     public function testGetFilmsByGenre()
     {
         $genre = Genre::factory()->create();
         $count = random_int(2, 10);
-        $films = Film::factory($count)->hasAttached($genre)->create(['released' => 2000]);
-        Film::factory($count)->create();
 
-        $response = $this->getJson(route('films.index', ['genre' => $genre->name]));
+        // Создаём фильмы с нужным жанром
+        $filmsWithGenre = Film::factory($count)
+            ->hasAttached($genre)
+            ->create(['released' => 2000])
+            ->sortBy('id'); // Сортируем по ID для стабильности
+
+        // Создаём фильмы БЕЗ жанров (фабрика не прикрепляет жанры по умолчанию)
+        Film::factory($count)->create(['released' => 2000]);
+
+        // Явно указываем сортировку по ID
+        $response = $this->getJson(route('films.index', [
+            'genre' => $genre->name,
+            'order_by' => 'id',      // ← Сортировка по ID
+            'order_to' => 'asc'      // ← По возрастанию
+        ]));
+
         $result = $response->json('data');
-//        $response->dump();
-//        dump($result);
 
         $response->assertStatus(200);
-        $response->assertJsonCount($count > 8 ? 8 : $count, 'data');
-        $this->assertEquals($films->pluck('id')->toArray(), Arr::pluck($result, 'id'));
+
+        // Только фильмы с жанром, но не больше 8 из-за пагинации
+        $expectedCount = min($count, 8);
+        $response->assertJsonCount($expectedCount, 'data');
+
+        // Проверяем конкретные ID в правильном порядке
+        $expectedIds = $filmsWithGenre->take($expectedCount)->pluck('id')->toArray();
+        $this->assertEquals($expectedIds, Arr::pluck($result, 'id'));
     }
+//    public function testGetFilmsByGenre0() // этот тест вызывал плавающую ошибку
+//        // из-за проблемы с непредсказуемой сортировкой в контроллере и модели
+//        // Исправленныйтест выше
+//    {
+//        $genre = Genre::factory()->create();
+//        $count = random_int(2, 10);
+//        $films = Film::factory($count)->hasAttached($genre)->create(['released' => 2000]);
+//        Film::factory($count)->create();
+//
+//        $response = $this->getJson(route('films.index', ['genre' => $genre->name]));
+//        $result = $response->json('data');
+////        $response->dump();
+////        dump($result);
+//
+//        $response->assertStatus(200);
+//        $response->assertJsonCount($count > 8 ? 8 : $count, 'data');
+//        $this->assertEquals($films->pluck('id')->toArray(), Arr::pluck($result, 'id'));
+//    }
 
     /**
      * Проверка, что по умолчанию возвращаются только готовые фильмы.
