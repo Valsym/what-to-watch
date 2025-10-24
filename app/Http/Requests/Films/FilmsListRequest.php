@@ -34,7 +34,7 @@ class FilmsListRequest extends FormRequest
             'page' => ['sometimes', 'integer', 'min:1'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'genre' => ['sometimes', 'string'],
-            'status' => ['sometimes', 'string', 'in:pending,on moderation,ready'],
+            'status' => ['sometimes', 'string', 'in:pending,moderate,ready'],
             'order_by' => ['sometimes', 'string', 'in:released,rating'],
             'order_to' => ['sometimes', 'string', 'in:asc,desc'],
             'search' => ['sometimes', 'string'],

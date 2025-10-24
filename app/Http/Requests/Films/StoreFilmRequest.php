@@ -6,6 +6,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
+ *
  * Класс запроса для создания нового фильма.
  *
  * Валидирует данные, которые приходят при создании фильма через API.

@@ -47,7 +47,7 @@ class UserRequest extends FormRequest
                 'string',
                 'min:8'
             ],
-            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg|max:1024'
+            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg|max:10240'
         ];
 
         return $rules;

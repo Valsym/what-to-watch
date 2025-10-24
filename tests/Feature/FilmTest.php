@@ -12,7 +12,7 @@ use Illuminate\Support\Arr;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
-class FilmsTest extends TestCase
+class FilmTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -74,29 +74,29 @@ class FilmsTest extends TestCase
     /**
      * Проверка получения списка фильмов по жанру.
      * Ожидается что будут возвращены только фильмы с указанным жанром.
-     * Указываем одинаковый год выпуска для исключения изменения порядка (дефолтной сортировки).
      * Примечание*: Запустите тест несколько раз подряд чтобы убедиться, что плавающая ошибка исчезла
      * for i in {1..10}; do sail artisan test --filter=testGetFilmsByGenre; done
      */
-    public function testGetFilmsByGenre()
+    public function testGetFilmsByGenre1()
     {
         $genre = Genre::factory()->create();
         $count = random_int(2, 10);
 
-        // Создаём фильмы с нужным жанром
+        // Создаём фильмы с нужным жанром и РАЗНЫМИ годами выпуска
         $filmsWithGenre = Film::factory($count)
             ->hasAttached($genre)
-            ->create(['released' => 2000])
-            ->sortBy('id'); // Сортируем по ID для стабильности
+            ->sequence(fn($sequence) => ['released' => 2000 + $sequence->index])
+            ->create()
+            ->sortBy('released'); // Сортируем по released для стабильности
 
-        // Создаём фильмы БЕЗ жанров (фабрика не прикрепляет жанры по умолчанию)
-        Film::factory($count)->create(['released' => 2000]);
+        // Создаём фильмы БЕЗ жанров
+        Film::factory($count)->create(['released' => 1990]); // Другие года
 
-        // Явно указываем сортировку по ID
+        // Используем разрешённую сортировку по released
         $response = $this->getJson(route('films.index', [
             'genre' => $genre->name,
-            'order_by' => 'id',      // ← Сортировка по ID
-            'order_to' => 'asc'      // ← По возрастанию
+            'order_by' => 'released',      // ← Используем разрешённое поле
+            'order_to' => 'asc'            // ← По возрастанию
         ]));
 
         $result = $response->json('data');
@@ -107,11 +107,11 @@ class FilmsTest extends TestCase
         $expectedCount = min($count, 8);
         $response->assertJsonCount($expectedCount, 'data');
 
-        // Проверяем конкретные ID в правильном порядке
+        // Проверяем конкретные ID в правильном порядке (по released)
         $expectedIds = $filmsWithGenre->take($expectedCount)->pluck('id')->toArray();
         $this->assertEquals($expectedIds, Arr::pluck($result, 'id'));
     }
-//    public function testGetFilmsByGenre0() // этот тест вызывал плавающую ошибку
+//    public function testGetFilmsByGenre() // этот тест вызывал плавающую ошибку
 //        // из-за проблемы с непредсказуемой сортировкой в контроллере и модели
 //        // Исправленныйтест выше
 //    {
@@ -157,6 +157,7 @@ class FilmsTest extends TestCase
         Film::factory()->create(['status' => Film::STATUS_PENDING]);
 
         $response = $this->getJson(route('films.index', ['status' => Film::STATUS_ON_MODERATION]));
+//        $response->dump();
 
         $response->assertStatus(200);
         $response->assertJsonCount(1, 'data');

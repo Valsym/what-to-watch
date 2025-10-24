@@ -154,7 +154,7 @@ class CommentTest extends TestCase
             'text' => $newText,
             'rating' => 5,
         ]);
-        $response->dump();
+//        $response->dump();
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('comments', [
