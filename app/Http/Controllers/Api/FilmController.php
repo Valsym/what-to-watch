@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\DTOs\CreateFilmData;
 use App\DTOs\FilmListQueryParams;
+use App\DTOs\UpdateFilmData;
 use App\Http\Requests\Films\FilmsListRequest;
 use App\Http\Requests\Films\StoreFilmRequest;
 use App\Http\Requests\Films\UpdateFilmRequest;
@@ -53,49 +55,38 @@ class FilmController extends Controller
     }
 
     /**
-     * Получение списка фильмов.
-     *
-     * @return Success
+     * Создание фильма (только для модераторов)
      */
-    public function index0(FilmsListRequest $request)
+    public function store(StoreFilmRequest $request)
     {
-        $filters = $request->validated();
-        $perPage = $filters['per_page'] ?? 8;
-        $userId = (int)Auth::id();
+        try {
+            $filmData = CreateFilmData::fromRequest($request);
+            $result = $this->filmService->createFilm($filmData);
 
-        $films = $this->filmListService->getFilmList($filters, $userId, $perPage);
-
-//        $films = Film::query()
-//            ->when($request->has('genre'), function ($query) use ($request) {
-//                $query->whereRelation('genres', 'name', $request->get('genre'));
-//            })
-//            ->when($request->has('status') && $request->user()?->isModerator(),
-//                function ($query) use ($request) {
-//                    $query->whereStatus($request->get('status'));
-//                },
-//                function ($query) {
-//                    $query->whereStatus(Film::STATUS_READY);
-//                }
-//            )
-//            ->ordered($request->get('order_by'), $request->get('order_to'));
-//            ->paginate($perPage);
-
-        return $this->success(FilmListResource::collection($films->paginate($perPage)));
+            return $this->success($result, 201);
+        } catch (\InvalidArgumentException $e) {
+            return $this->error($e->getMessage(), [], 422);
+        } catch (\Exception $e) {
+            return $this->error('Ошибка при создании фильма', [], 500);
+        }
     }
 
     /**
-     * Добавление фильма в бд
-     *
-     * @param StoreFilmRequest $request
-     *
-     * @return Success
-     * @throws Throwable
+     * Обновление фильма (только для модераторов)
      */
-    public function store(StoreFilmRequest $request): Success
+    public function update(UpdateFilmRequest $request, int $id)
     {
-        $film = $this->filmCreateService->createFilm($request->validated());
+        try {
+            $filmData = UpdateFilmData::fromRequest($request);
+            $result = $this->filmService->updateFilm($id, $filmData);
 
-        return $this->success(new FilmResource($film), Response::HTTP_CREATED);
+            return $this->success($result);
+        } catch (\InvalidArgumentException $e) {
+            $statusCode = $e->getCode() ?: 422;
+            return $this->error($e->getMessage(), [], $statusCode);
+        } catch (\Exception $e) {
+            return $this->error('Ошибка при обновлении фильма', [], 500);
+        }
     }
 
     /**
@@ -112,37 +103,6 @@ class FilmController extends Controller
         }
 
         return $this->success($filmDetails);
-    }
-
-     /**
-     * Получение информации о фильме
-     *
-     * @param  \App\Models\Film  $film
-     * @return Success
-     */
-    public function show0(int $id): Success
-    {
-        $film = Film::findOrFail($id);
-
-//        $data = $this->repository->getFilm('tt0031381');
-//        UpdateFilms::dispatchSync();//$film);
-
-        return $this->success(new FilmResource($film));
-//        return $this->success($film->append('rating')->loadCount('scores'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(UpdateFilmRequest $request, int $id): Success
-    {
-        $film = $this->filmUpdateService->updateFilm($id, $request->validated());
-
-        return $this->success(new FilmResource($film));
     }
 
     /**

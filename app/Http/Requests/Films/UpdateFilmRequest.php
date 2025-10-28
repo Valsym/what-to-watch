@@ -14,14 +14,15 @@ use Illuminate\Validation\Rule;
 class UpdateFilmRequest extends FormRequest
 {
     /**
-     * Разрешает всем пользователям делать данный запрос.
-     * Правила доступа регулируются миддлварами и гейтами в роутах
+     * Разрешает только модераторам делать данный запрос.
+     * Правила доступа регулируются также миддлварами и гейтами в роутах
      *
      * @return bool
      */
     public function authorize(): bool
     {
-        return true;
+//        return true;
+        return $this->user() && $this->user()->isModerator();
     }
 
     /**
@@ -31,8 +32,10 @@ class UpdateFilmRequest extends FormRequest
      */
     public function rules(): array
     {
+        $filmId = $this->route('id');
+
         return [
-            'name' => ['sometimes', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'poster_image' => ['sometimes', 'string', 'max:255'],
             'preview_image' => ['sometimes', 'string', 'max:255'],
             'background_image' => ['sometimes', 'string', 'max:255'],
@@ -44,20 +47,42 @@ class UpdateFilmRequest extends FormRequest
             'starring' => ['sometimes', 'array'],
             'starring.*' => ['string'],
             'genre' => ['sometimes', 'array'],
-            'genre.*' => ['string'],
-            'run_time' => ['sometimes', 'integer'],
-            'released' => ['sometimes', 'integer'],
+//            'genre.*' => ['string'],
+            'genre.*' => ['exists:genres,id'],
+//            'run_time' => ['sometimes', 'integer'],
+//            'released' => ['sometimes', 'integer'],
+//            'imdb_id' => [
+//                'sometimes',
+//                'string',
+//                'regex:/^tt\d{7,}$/',
+//                Rule::unique('films', 'imdb_id')->ignore($this->route('id')),
+//            ],
+//            'status' => [
+//                'sometimes',
+//                'string',
+//                Rule::in(['pending', 'on moderation', 'ready']),
+//            ],
+
+            'run_time' => ['sometimes', 'integer', 'min:1'],
+            'released' => ['sometimes', 'integer', 'min:1900', 'max:' . (date('Y') + 5)],
             'imdb_id' => [
                 'sometimes',
                 'string',
-                'regex:/^tt\d{7,}$/',
-                Rule::unique('films', 'imdb_id')->ignore($this->route('id')),
+                'regex:/^tt\d{7,8}$/',
+                Rule::unique('films')->ignore($filmId)
             ],
-            'status' => [
-                'sometimes',
-                'string',
-                Rule::in(['pending', 'on moderation', 'ready']),
-            ],
+            'status' => ['sometimes', 'string', 'in:pending,moderate,ready'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'imdb_id.required' => 'IMDB ID обязателен для заполнения',
+            'imdb_id.regex' => 'Неверный формат IMDB ID',
+            'imdb_id.unique' => 'Фильм с таким IMDB ID уже существует',
+            'status.in' => 'Статус должен быть одним из: pending, moderate, ready',
+            'genre.*.exists' => 'Указанный жанр не существует',
         ];
     }
 }

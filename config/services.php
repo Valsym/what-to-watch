@@ -37,7 +37,8 @@ return [
 
     'omdb' => [
         'films' => [
-            'url' => env('EXT_API_FILMS', 'http://academy.localhost/api/films/')
+            'url' => env('EXT_API_FILMS', 'http://academy.localhost/api/films/'),
+            'api_key' => env('OMDB_API_KEY'),
         ],
         'comments' => [
             'url' => env('EXT_API_COMMENTS', 'http://academy.localhost/api/comments/')

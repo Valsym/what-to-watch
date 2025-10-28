@@ -21,7 +21,8 @@ class StoreFilmRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+//        return true;
+        return $this->user() && $this->user()->isModerator();
     }
 
     /**
@@ -32,7 +33,13 @@ class StoreFilmRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'imdb_id' => ['required', 'string', 'unique:films,imdb_id'],
+//            'imdb_id' => ['required', 'string', 'unique:films,imdb_id'],
+            'imdb_id' => [
+                'required',
+                'string',
+                'regex:/^tt\d{7,8}$/',
+                'unique:films,imdb_id'
+            ],
         ];
     }
 
@@ -73,7 +80,8 @@ class StoreFilmRequest extends FormRequest
         return [
             'imdb_id.required' => 'IMDb ID обязателен для заполнения',
             'imdb_id.unique' => 'Фильм с таким IMDb ID уже существует',
-            'imdb_id.regex' => 'Некорректный формат IMDb ID (должен начинаться с tt и содержать 7-8 цифр)'
+//            'imdb_id.regex' => 'Некорректный формат IMDb ID (должен начинаться с tt и содержать 7-8 цифр)'
+            'imdb_id.regex' => 'Неверный формат IMDB ID. Пример: tt0944947'
         ];
     }
 }

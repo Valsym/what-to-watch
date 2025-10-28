@@ -5,10 +5,12 @@ namespace App\Providers;
 //use App\Interfaces\FilmsOmdbRepositoryInterface;
 use App\Models\Film;
 use App\Models\Comment;
+use App\Models\Genre;
 use App\Models\User;
 //use App\Repositories\Films\FilmsOmdbRepository;
 use App\Repositories\Films\FilmRepository;
 use App\Services\Films\FilmService;
+use App\Services\Films\OmdbService;
 use App\Support\Import\FilmsRepository;
 use App\Support\Import\TvmazeRepository;
 use Illuminate\Support\Facades\Gate;
@@ -42,11 +44,21 @@ class AppServiceProvider extends ServiceProvider
 //            }
 //        );
         $this->app->bind(FilmRepository::class, function ($app) {
-            return new FilmRepository(new Film());
+            return new FilmRepository(
+                new Film(),
+                new Genre() // Добавляем второй обязательный аргумент
+            );
         });
 
         $this->app->bind(FilmService::class, function ($app) {
-            return new FilmService($app->make(FilmRepository::class));
+            return new FilmService(
+                $app->make(FilmRepository::class),
+                $app->make(OmdbService::class) // Добавляем второй обязательный аргумент
+            );
+        });
+
+        $this->app->bind(OmdbService::class, function ($app) {
+            return new OmdbService(/* необходимые зависимости */);
         });
     }
 

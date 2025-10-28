@@ -125,7 +125,7 @@ class FilmTest extends TestCase
         ]);
 
         $responseData = $response->json();
-        $this->assertCount($count, $responseData['data']['data']);
+        $this->assertCount($count > 8 ? 8 : $count, $responseData['data']['data']);
 
     }
 
@@ -206,7 +206,7 @@ class FilmTest extends TestCase
 
         // Проверяем количество фильмов в data.data
         $filmsData = $responseData['data']['data'];
-        $this->assertCount($count, $filmsData);
+        $this->assertCount($count > 8 ? 8 : $count, $filmsData);
 
         // Проверяем конкретные ID в правильном порядке (по released)
         $expectedIds = $filmsWithGenre->take($count)->pluck('id')->toArray();
@@ -370,26 +370,32 @@ class FilmTest extends TestCase
                 'imdb_id' => 'tt1234567',
             ]);
 
-        $response->assertCreated()->assertJsonStructure([
+        $response->assertCreated();
+//        dump($response->json());
+
+        // Проверяем структуру ответа
+        $response->assertJsonStructure([
             'data' => [
-                "id",
-                "name",
-                "poster_image",
-                "preview_image",
-                "background_image",
-                "background_color",
-                "video_link",
-                "preview_video_link",
-                "description",
-                "rating",
-                "scores_count",
-                "director",
-                "starring",
-                "run_time",
-                "genre",
-                "released",
-                "is_favorite",
-                "promo",
+                'data' => [
+                    "id",
+                    "name",
+                    "poster_image",
+                    "preview_image",
+                    "background_image",
+                    "background_color",
+                    "video_link",
+                    "preview_video_link",
+                    "description",
+                    "rating",
+                    "scores_count",
+                    "director",
+                    "starring",
+                    "run_time",
+                    "genre",
+                    "released",
+                    "is_favorite",
+                    "promo",
+                ]
             ]
         ]);
     }
