@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\DTOs\FilmListQueryParams;
 use App\Http\Requests\Films\FilmsListRequest;
 use App\Http\Requests\Films\StoreFilmRequest;
 use App\Http\Requests\Films\UpdateFilmRequest;
@@ -9,13 +10,16 @@ use App\Http\Resources\FilmListResource;
 use App\Http\Resources\FilmResource;
 use App\Http\Responses\Success;
 use App\Models\Film;
+//use App\Repositories\FilmRepository;
 use App\Repositories\Films\FilmRepository;
 use App\Services\Films\FilmCreateService;
 use App\Services\Films\FilmListService;
 use App\Services\Films\FilmService;
 use App\Services\Films\FilmUpdateService;
+//use App\Services\FilmService;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,6 +28,7 @@ use Throwable;
 class FilmController extends Controller
 {
     public function __construct(
+        private FilmService $filmService,
         protected FilmListService $filmListService,
         protected FilmCreateService $filmCreateService,
         protected FilmUpdateService $filmUpdateService,
@@ -38,26 +43,41 @@ class FilmController extends Controller
 
     /**
      * Получение списка фильмов.
-     *
-     * @return Success
      */
     public function index(FilmsListRequest $request)
     {
-        $perPage = $request['per_page'] ?? 8;
+        $queryParams = FilmListQueryParams::fromRequest($request);
+        $result = $this->filmService->getFilmsList($queryParams);
 
-        $films = Film::query()
-            ->when($request->has('genre'), function ($query) use ($request) {
-                $query->whereRelation('genres', 'name', $request->get('genre'));
-            })
-            ->when($request->has('status') && $request->user()?->isModerator(),
-                function ($query) use ($request) {
-                    $query->whereStatus($request->get('status'));
-                },
-                function ($query) {
-                    $query->whereStatus(Film::STATUS_READY);
-                }
-            )
-            ->ordered($request->get('order_by'), $request->get('order_to'));
+        return $this->success($result);
+    }
+
+    /**
+     * Получение списка фильмов.
+     *
+     * @return Success
+     */
+    public function index0(FilmsListRequest $request)
+    {
+        $filters = $request->validated();
+        $perPage = $filters['per_page'] ?? 8;
+        $userId = (int)Auth::id();
+
+        $films = $this->filmListService->getFilmList($filters, $userId, $perPage);
+
+//        $films = Film::query()
+//            ->when($request->has('genre'), function ($query) use ($request) {
+//                $query->whereRelation('genres', 'name', $request->get('genre'));
+//            })
+//            ->when($request->has('status') && $request->user()?->isModerator(),
+//                function ($query) use ($request) {
+//                    $query->whereStatus($request->get('status'));
+//                },
+//                function ($query) {
+//                    $query->whereStatus(Film::STATUS_READY);
+//                }
+//            )
+//            ->ordered($request->get('order_by'), $request->get('order_to'));
 //            ->paginate($perPage);
 
         return $this->success(FilmListResource::collection($films->paginate($perPage)));
@@ -78,13 +98,29 @@ class FilmController extends Controller
         return $this->success(new FilmResource($film), Response::HTTP_CREATED);
     }
 
+    /**
+     * Получение детальной информации о фильме.
+     */
+    public function show(int $id)
+    {
+        $filmDetails = $this->filmService->getFilmDetails($id);
+
+        if (!$filmDetails) {
+            return $this->notFound(); // или $this->notFound('Фильм не найден')
+//            return $this->error('Фильм не найден', 404);
+//            return $this->error('Запрашиваемая страница не существует', [], 404);
+        }
+
+        return $this->success($filmDetails);
+    }
+
      /**
      * Получение информации о фильме
      *
      * @param  \App\Models\Film  $film
      * @return Success
      */
-    public function show(int $id): Success
+    public function show0(int $id): Success
     {
         $film = Film::findOrFail($id);
 
@@ -106,7 +142,7 @@ class FilmController extends Controller
     {
         $film = $this->filmUpdateService->updateFilm($id, $request->validated());
 
-        return $this->success(new FilmResource($film), Response::HTTP_OK);
+        return $this->success(new FilmResource($film));
     }
 
     /**

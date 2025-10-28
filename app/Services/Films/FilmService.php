@@ -1,51 +1,47 @@
 <?php
+// app/Services/FilmService.php
 
 namespace App\Services\Films;
 
-use App\Models\Film;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
+//use App\Repositories\FilmRepository;
+use App\DTOs\FilmListQueryParams;
+use App\Repositories\Films\FilmRepository;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Http\Resources\FilmListResource;
+use App\Http\Resources\FilmResource;
 
 class FilmService
 {
-    /**
-     * Получение похожих фильмов
-     *
-     * @param Film $film
-     * @param array $fields
-     * @return mixed
-     */
-    public function getSimilarFor(Film $film, array $fields = ['*'])
+    public function __construct(
+        private FilmRepository $filmRepository
+    ) {}
+
+    public function getFilmsList(FilmListQueryParams $params): array
     {
-        return Film::select($fields)
-            ->whereHas('genres', function ($query) use ($film) {
-                $query->whereIn('genres.id', $film->genres()->pluck('genres.id'));
-            })
-            ->where('id', '!=', $film->id)
-            ->take(config('app.api.films.similar.limit', 4))
-            ->get();
+        $filmsPaginator = $this->filmRepository->getFilmsList($params);
+
+        return [
+            'data' => FilmListResource::collection($filmsPaginator->items()),
+            'current_page' => $filmsPaginator->currentPage(),
+            'first_page_url' => $filmsPaginator->url(1),
+            'next_page_url' => $filmsPaginator->nextPageUrl(),
+            'prev_page_url' => $filmsPaginator->previousPageUrl(),
+            'per_page' => $filmsPaginator->perPage(),
+            'total' => $filmsPaginator->total(),
+        ];
     }
 
-    public function getPromo()
+    // Дополнительные сервисные методы
+    public function getFilmDetails(int $filmId): ?array
     {
-        return Film::promo()->latest('updated_at')->first();
-    }
+        $film = $this->filmRepository->findById($filmId);
 
-    /*
-     * Сохранение файла указанного типа
-     */
-    public function saveFile(string $url, string $type, string $name): string
-    {
-        // Рекомендации:
-        // Хранить файл с hash суффиксом, или иначе контролировать кеширование (при использовании hash в имени - нужно удалять старые версии)
-        // Ограничивать к-во файлов в одной папке
+        if (!$film) {
+            return null;
+        }
 
-        $file = Http::get($url)->body();
-        $ext = pathinfo($url, PATHINFO_EXTENSION);
-        $path = $type . DIRECTORY_SEPARATOR . $name . ".$ext";
-
-        Storage::disk('public')->put($path, $file);
-
-        return Storage::disk('public')->url($path);
+        return [
+            'data' => new FilmResource($film)
+        ];
     }
 }

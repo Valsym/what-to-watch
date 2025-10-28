@@ -2,14 +2,12 @@
 
 namespace App\Http\Responses;
 
-use AllowDynamicProperties;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Validation\Validator;
 use Override;
 use stdClass;
 use Symfony\Component\HttpFoundation\Response;
 
-#[AllowDynamicProperties]
 class ErrorResponse extends Base
 {
     protected string $message;
@@ -35,7 +33,7 @@ class ErrorResponse extends Base
      *
      * @return array
      */
-    #[Override]
+    #[Override] //Эта аннотация указывает, что метод переопределяет метод родительского класса.
     protected function makeResponseData(): array
     {
         return [

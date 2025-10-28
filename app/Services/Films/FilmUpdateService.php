@@ -4,6 +4,7 @@ namespace App\Services\Films;
 
 use App\Models\Film;
 //use App\Repositories\Films\FilmRepository;
+use App\Repositories\Films\FilmRepository;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -16,10 +17,10 @@ class FilmUpdateService
      * @psalm-suppress PossiblyUnusedMethod
      * Laravel DI автоматически вызывает этот конструктор
      */
-//    public function __construct(protected FilmRepository $filmRepository)
-//    {
-//
-//    }
+    public function __construct(protected FilmRepository $filmRepository)
+    {
+
+    }
 
     /**
      * Обновляет данные фильма

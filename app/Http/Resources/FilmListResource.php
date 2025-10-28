@@ -6,7 +6,7 @@ use App\Models\Film;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
-use Override;
+//use Override;
 
 /**
  * Ресурс для краткого представления фильма в списке.
@@ -32,7 +32,7 @@ final class FilmListResource extends JsonResource
      *
      * @psalm-return array{id: int, name: string, poster_image: null|string, preview_image: null|string, preview_video_link: null|string, genre: mixed|null, released: int}
      */
-    #[Override]
+//    #[Override]
     public function toArray(Request $request): array
     {
         return [
@@ -41,8 +41,16 @@ final class FilmListResource extends JsonResource
             'poster_image' => $this->poster_image,
             'preview_image' => $this->preview_image,
             'preview_video_link' => $this->preview_video_link,
-            'genre' => $this->genres !== null ? $this->genres->pluck('name')->first() : null,
+//            'genre' => $this->genres !== null ? $this->genres->pluck('name')->first() : null,
             'released' => (int)$this->released,
+//            'genre' => $this->genres->pluck('name')->first(),
+            'genre' => $this->genres->isNotEmpty() ? $this->genres->first()->name : null,
+            // Добавляем rating для главной страницы если нужно
+//            'rating' => $this->when($request->has('order_by') && $request->get('order_by') === 'rating',
+//                function () {
+//                    return $this->rating ?? 0;
+//                }
+//            ),
         ];
     }
 }

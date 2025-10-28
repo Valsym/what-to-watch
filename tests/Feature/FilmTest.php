@@ -31,20 +31,63 @@ class FilmTest extends TestCase
 //        $response->assertJsonFragment(['total' => $count]);
 //
 //        $response->assertJsonCount($count, 'data');
+//        $response->assertJsonStructure([
+//            'data' => [
+//                '*' => [
+//                    'id',
+//                    'name',
+//                    'poster_image',
+//                    'preview_image',
+//                    'preview_video_link',
+//                    'genre',
+//                    'released',
+//                ]
+//            ]
+//        ]);
+        // Проверяем структуру ответа
         $response->assertJsonStructure([
             'data' => [
-                '*' => [
-                    'id',
-                    'name',
-                    'poster_image',
-                    'preview_image',
-                    'preview_video_link',
-                    'genre',
-                    'released',
-                ]
+                'data' => [
+                    '*' => [
+                        'id',
+                        'name',
+                        'poster_image',
+                        'preview_image',
+                        'preview_video_link',
+                        'genre',
+                        'released',
+                    ]
+                ],
+                'current_page',
+                'first_page_url',
+                'next_page_url',
+                'prev_page_url',
+                'per_page',
+                'total'
             ]
         ]);
-        $response->assertJsonCount($count > 8 ? 8 : $count, 'data');
+//        $response->assertJsonStructure([
+//            'data' => [
+//                '*' => [
+//                    'id',
+//                    'name',
+//                    'poster_image',
+//                    'preview_image',
+//                    'preview_video_link',
+//                    'genre',
+//                    'released',
+//                ]
+//            ],
+//            'current_page',
+//            'first_page_url',
+//            'next_page_url',
+//            'prev_page_url',
+//            'per_page',
+//            'total'
+//        ]);
+//        $response->assertJsonCount($count > 8 ? 8 : $count, 'data');
+        $responseData = $response->json();
+        $this->assertCount($count, $responseData['data']['data']);
     }
 
     /**
@@ -65,9 +108,24 @@ class FilmTest extends TestCase
 
         $response = $this->getJson(route('films.index'));
 
-        $response->assertStatus(200);
-        $response->assertJsonStructure(['data']);
-        $response->assertJsonCount($count > 8 ? 8 : $count, 'data');
+//        $response->assertStatus(200);
+//        $response->assertJsonStructure(['data']);
+////        $response->assertJsonCount($count > 8 ? 8 : $count, 'data');
+//        $response->assertJsonCount($count, 'data'); // Теперь ожидаем ровно $count
+        $response->assertJsonStructure([
+            'data' => [
+                'data',
+                'current_page',
+                'first_page_url',
+                'next_page_url',
+                'prev_page_url',
+                'per_page',
+                'total'
+            ]
+        ]);
+
+        $responseData = $response->json();
+        $this->assertCount($count, $responseData['data']['data']);
 
     }
 
@@ -77,7 +135,7 @@ class FilmTest extends TestCase
      * Примечание*: Запустите тест несколько раз подряд чтобы убедиться, что плавающая ошибка исчезла
      * for i in {1..10}; do sail artisan test --filter=testGetFilmsByGenre; done
      */
-    public function testGetFilmsByGenre1()
+    public function testGetFilmsByGenre()
     {
         $genre = Genre::factory()->create();
         $count = random_int(2, 10);
@@ -89,8 +147,23 @@ class FilmTest extends TestCase
             ->create()
             ->sortBy('released'); // Сортируем по released для стабильности
 
+        // Проверяем, что фильмы создались с правильным статусом
+        $this->assertDatabaseCount('films', $count);
+        $this->assertDatabaseHas('films', [
+            'status' => Film::STATUS_READY
+        ]);
+
         // Создаём фильмы БЕЗ жанров
         Film::factory($count)->create(['released' => 1990]); // Другие года
+
+        // Добавим проверку количества фильмов в базе
+        $totalFilms = Film::count();
+        $filmsWithGenreCount = Film::whereHas('genres', function ($query) use ($genre) {
+            $query->where('name', $genre->name);
+        })->count();
+
+//        dump("Total films: " . $totalFilms);
+//        dump("Films with genre: " . $filmsWithGenreCount);
 
         // Используем разрешённую сортировку по released
         $response = $this->getJson(route('films.index', [
@@ -98,18 +171,56 @@ class FilmTest extends TestCase
             'order_by' => 'released',      // ← Используем разрешённое поле
             'order_to' => 'asc'            // ← По возрастанию
         ]));
+//        dump($response->json());
 
-        $result = $response->json('data');
-
+//        $result = $response->json('data');
+//
+//        $response->assertStatus(200);
         $response->assertStatus(200);
 
-        // Только фильмы с жанром, но не больше 8 из-за пагинации
-        $expectedCount = min($count, 8);
-        $response->assertJsonCount($expectedCount, 'data');
+        // Получаем всю структуру ответа
+        $responseData = $response->json();
+
+        // Проверяем структуру ответа
+        $response->assertJsonStructure([
+            'data' => [
+                'data' => [
+                    '*' => [
+                        'id',
+                        'name',
+                        'poster_image',
+                        'preview_image',
+                        'preview_video_link',
+                        'genre',
+                        'released'
+                    ]
+                ],
+                'current_page',
+                'first_page_url',
+                'next_page_url',
+                'prev_page_url',
+                'per_page',
+                'total'
+            ]
+        ]);
+
+        // Проверяем количество фильмов в data.data
+        $filmsData = $responseData['data']['data'];
+        $this->assertCount($count, $filmsData);
 
         // Проверяем конкретные ID в правильном порядке (по released)
-        $expectedIds = $filmsWithGenre->take($expectedCount)->pluck('id')->toArray();
-        $this->assertEquals($expectedIds, Arr::pluck($result, 'id'));
+        $expectedIds = $filmsWithGenre->take($count)->pluck('id')->toArray();
+        $actualIds = array_column($filmsData, 'id');
+        $this->assertEquals($expectedIds, $actualIds);
+
+
+//        // Только фильмы с жанром, но не больше 8 из-за пагинации
+//        $expectedCount = min($count, 8);
+//        $response->assertJsonCount($expectedCount, 'data');
+//
+//        // Проверяем конкретные ID в правильном порядке (по released)
+//        $expectedIds = $filmsWithGenre->take($expectedCount)->pluck('id')->toArray();
+//        $this->assertEquals($expectedIds, Arr::pluck($result, 'id'));
     }
 //    public function testGetFilmsByGenre() // этот тест вызывал плавающую ошибку
 //        // из-за проблемы с непредсказуемой сортировкой в контроллере и модели
@@ -141,8 +252,17 @@ class FilmTest extends TestCase
         $response = $this->getJson(route('films.index'));
 
         $response->assertStatus(200);
-        $response->assertJsonCount(1, 'data');
+//        $response->assertJsonCount(1, 'data');
+
+        $responseData = $response->json();
+        $this->assertCount(1, $responseData['data']['data']);
         $response->assertJsonFragment(['id' => $film->id]);
+    }
+
+    public function testFilmStatus()
+    {
+        $film = Film::factory()->create();
+        $this->assertEquals(Film::STATUS_READY, $film->status);
     }
 
     /**
@@ -160,7 +280,9 @@ class FilmTest extends TestCase
 //        $response->dump();
 
         $response->assertStatus(200);
-        $response->assertJsonCount(1, 'data');
+//        $response->assertJsonCount(1, 'data');
+        $responseData = $response->json();
+        $this->assertCount(1, $responseData['data']['data']);
         $response->assertJsonFragment(['id' => $film->id]);
     }
 
@@ -184,8 +306,12 @@ class FilmTest extends TestCase
         $response = $this->getJson(route('films.index', ['order_by' => 'rating', 'order_to' => 'asc']));
         $result = $response->json('data');
 
+        $responseData = $response->json();
+        $result = $responseData['data']['data'];
+
         $response->assertStatus(200);
         $this->assertEquals([$film2->id, $film3->id, $film1->id], Arr::pluck($result, 'id'));
+
     }
 
     /**

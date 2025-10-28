@@ -97,42 +97,6 @@ class Film extends Model
 
     ];
 
-    /*public const LIST_FIELDS = ['films.id', 'name', 'preview_image', 'preview_video_link'];
-
-    protected $with = ['genres'];
-
-    protected $appends = [
-        'rating',
-        'is_favorite',
-    ];
-
-    protected $hidden = [
-        'created_at',
-        'updated_at',
-        'pivot',
-    ];
-
-    protected $casts = [
-        'starring' => 'array',
-        'promo' => 'bool',
-    ];
-
-    protected $fillable = [
-        'name',
-        'poster_image',
-        'preview_image',
-        'background_image',
-        'background_color',
-        'video_link',
-        'preview_video_link',
-        'description',
-        'director',
-        'starring',
-        'run_time',
-        'released',
-        'promo',
-    ];*/
-
     public function genres(): BelongsToMany
     {
 //        return $this->belongsToMany(Genre::class);

@@ -3,9 +3,12 @@
 namespace App\Providers;
 
 //use App\Interfaces\FilmsOmdbRepositoryInterface;
+use App\Models\Film;
 use App\Models\Comment;
 use App\Models\User;
 //use App\Repositories\Films\FilmsOmdbRepository;
+use App\Repositories\Films\FilmRepository;
+use App\Services\Films\FilmService;
 use App\Support\Import\FilmsRepository;
 use App\Support\Import\TvmazeRepository;
 use Illuminate\Support\Facades\Gate;
@@ -38,6 +41,13 @@ class AppServiceProvider extends ServiceProvider
 //                return new GuzzleAdapter(new Client());
 //            }
 //        );
+        $this->app->bind(FilmRepository::class, function ($app) {
+            return new FilmRepository(new Film());
+        });
+
+        $this->app->bind(FilmService::class, function ($app) {
+            return new FilmService($app->make(FilmRepository::class));
+        });
     }
 
     /**
