@@ -20,6 +20,8 @@ use App\Services\Films\FilmService;
 use App\Services\Films\FilmUpdateService;
 //use App\Services\FilmService;
 use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -111,13 +113,51 @@ class FilmController extends Controller
      * @param Film $film
      * @return \App\Http\Responses\Success
      */
-    public function similar(int $id, FilmService $service)
+    public function similar0(int $id, FilmService $service)
     {
         $film = Film::findOrFail($id);
         $films = $service->getSimilarFor($film, Film::LIST_FIELDS);
 
         return $this->success(FilmListResource::collection($films));
 //        return $this->success($service->getSimilarFor($film, Film::LIST_FIELDS));
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/films/{id}/similar",
+     *     summary="Get similar films",
+     *     tags={"Films"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Film ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of similar films",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Film"))
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Film not found")
+     * )
+     */
+    public function similar(int $id): JsonResponse
+    {
+        try {
+            $similarFilms = $this->filmService->getSimilarFilms($id);
+
+            return response()->json([
+                'data' => $similarFilms
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return $this->notFound();
+//            return response()->json([
+//                'message' => 'Film not found'
+//            ], 404);
+        }
     }
 
     /**

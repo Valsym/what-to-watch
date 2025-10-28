@@ -6,6 +6,7 @@ namespace App\Services\Films;
 //use App\Repositories\FilmRepository;
 use App\DTOs\CreateFilmData;
 use App\DTOs\FilmListQueryParams;
+use App\DTOs\Films\SimilarFilmDto;
 use App\DTOs\UpdateFilmData;
 use App\Jobs\FetchFilmDataFromOmdbJob;
 use App\Repositories\Films\FilmRepository;
@@ -97,5 +98,32 @@ class FilmService
             // Логируем ошибку, но не прерываем выполнение
             \Log::error('Failed to fetch data from OMDB for film', ['film_id' => $filmId]);
         }
+    }
+
+    public function getSimilarFilms(int $filmId): array
+    {
+        $films = $this->filmRepository->getSimilarFilms($filmId);
+
+        return $films->map(function ($film) {
+            return new SimilarFilmDto(
+                id: $film->id,
+                name: $film->name,
+                poster_image: $film->poster_image,
+                preview_image: $film->preview_image,
+                background_image: $film->background_image,
+                background_color: $film->background_color,
+                video_link: $film->video_link,
+                preview_video_link: $film->preview_video_link,
+                description: $film->description,
+                rating: $film->rating,
+//                scores_count: $film->scores_count,
+                director: $film->director,
+                starring: $film->starring ?? [],
+                run_time: $film->run_time,
+                genre: $film->genres->pluck('name')->toArray(),
+                released: $film->released,
+                is_favorite: $film->is_favorite ?? false,
+            );
+        })->toArray();
     }
 }

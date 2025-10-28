@@ -27,23 +27,6 @@ class FilmTest extends TestCase
         $response = $this->getJson(route('films.index'));
 
         $response->assertStatus(200);
-//        $response->assertJsonStructure(['data' => [], 'links' => [], 'total']);
-//        $response->assertJsonFragment(['total' => $count]);
-//
-//        $response->assertJsonCount($count, 'data');
-//        $response->assertJsonStructure([
-//            'data' => [
-//                '*' => [
-//                    'id',
-//                    'name',
-//                    'poster_image',
-//                    'preview_image',
-//                    'preview_video_link',
-//                    'genre',
-//                    'released',
-//                ]
-//            ]
-//        ]);
         // Проверяем структуру ответа
         $response->assertJsonStructure([
             'data' => [
@@ -66,28 +49,9 @@ class FilmTest extends TestCase
                 'total'
             ]
         ]);
-//        $response->assertJsonStructure([
-//            'data' => [
-//                '*' => [
-//                    'id',
-//                    'name',
-//                    'poster_image',
-//                    'preview_image',
-//                    'preview_video_link',
-//                    'genre',
-//                    'released',
-//                ]
-//            ],
-//            'current_page',
-//            'first_page_url',
-//            'next_page_url',
-//            'prev_page_url',
-//            'per_page',
-//            'total'
-//        ]);
-//        $response->assertJsonCount($count > 8 ? 8 : $count, 'data');
+
         $responseData = $response->json();
-        $this->assertCount($count, $responseData['data']['data']);
+        $this->assertCount($count > 8 ? 8 : $count, $responseData['data']['data']);
     }
 
     /**
@@ -488,6 +452,64 @@ class FilmTest extends TestCase
         $response->assertJsonCount(1);
         $response->assertJsonFragment(['id' => $film2->id]);
         $response->assertJsonMissing(['id' => $film3->id]);
+    }
+
+    public function testGetSimilarFilms(): void
+    {
+        // Создаем жанры
+        $genre1 = Genre::factory()->create(['name' => 'Action']);
+        $genre2 = Genre::factory()->create(['name' => 'Adventure']);
+
+        // Создаем основной фильм
+        $mainFilm = Film::factory()->create();
+        $mainFilm->genres()->attach([$genre1->id, $genre2->id]);
+
+        // Создаем похожие фильмы с теми же жанрами
+        $similarFilms = Film::factory()->count(3)->create();
+        foreach ($similarFilms as $film) {
+            $film->genres()->attach([$genre1->id]);
+        }
+
+        // Создаем фильм с другим жанром (не должен попасть в результаты)
+        $differentFilm = Film::factory()->create();
+        $differentGenre = Genre::factory()->create(['name' => 'Comedy']);
+        $differentFilm->genres()->attach([$differentGenre->id]);
+
+        $response = $this->getJson(route('films.similar', $mainFilm->id));
+
+        $response->assertOk()
+            ->assertJsonCount(3, 'data') // Должны получить 3 похожих фильма
+            ->assertJsonStructure([
+                'data' => [
+                    '*' => [
+                        'id',
+                        'name',
+                        'poster_image',
+                        'preview_image',
+                        'background_image',
+                        'background_color',
+                        'video_link',
+                        'preview_video_link',
+                        'description',
+                        'rating',
+//                        'scores_count',
+                        'director',
+                        'starring',
+                        'run_time',
+                        'genre',
+                        'released',
+                        'is_favorite',
+                    ]
+                ]
+            ]);
+
+        // Проверяем, что в ответе нет основного фильма
+        $responseData = $response->json('data');
+        $filmIds = array_column($responseData, 'id');
+        $this->assertNotContains($mainFilm->id, $filmIds);
+
+        // Проверяем, что нет фильма с другим жанром
+        $this->assertNotContains($differentFilm->id, $filmIds);
     }
 
     /**

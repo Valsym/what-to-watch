@@ -158,12 +158,6 @@ class FilmRepository
         $film->genres()->sync($genreIds);
     }
 
-
-    public function filmExistsByImdbId0(string $imdbId): bool
-    {
-        return $this->film->where('imdb_id', $imdbId)->exists();
-    }
-
     /**
      * Ищет фильм по ID
      *
@@ -185,5 +179,26 @@ class FilmRepository
         }
 
         return $query->exists();
+    }
+
+    public function getSimilarFilms(int $filmId, int $limit = 4): Collection
+    {
+        // Получаем текущий фильм и его жанры
+        $film = $this->film->with('genres')->findOrFail($filmId);
+        $genreIds = $film->genres->pluck('id')->toArray();
+
+        if (empty($genreIds)) {
+            return collect();
+        }
+
+        // Ищем фильмы с такими же жанрами, исключая текущий
+        return $this->film
+            ->where('id', '!=', $filmId)
+            ->whereHas('genres', function ($query) use ($genreIds) {
+                $query->whereIn('genres.id', $genreIds);
+            })
+            ->with(['genres'])
+            ->limit($limit)
+            ->get();
     }
 }
