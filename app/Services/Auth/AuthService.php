@@ -41,8 +41,10 @@ class AuthService
         $token = $user->createToken('auth_token');
 
         return [
-            'user' => $this->mapUserToDto($user),
-            'token' => new TokenDto($token->plainTextToken),
+            'user' => $this->mapUserToDto($user)->toArray(), // преобразуем в массив
+            'token' => (new TokenDto($token->plainTextToken))->toArray(), // преобразуем в массив
+//            'user' => $this->mapUserToDto($user),
+//            'token' => new TokenDto($token->plainTextToken),
         ];
     }
 
@@ -57,7 +59,8 @@ class AuthService
         Auth::login($user);
         $token = $user->createToken('auth_token');
 
-        return new TokenDto($token->plainTextToken);
+        return $token->toArray(); // возвращаем массив
+//        return new TokenDto($token->plainTextToken);
     }
 
     public function logout(int $userId): void
@@ -75,7 +78,8 @@ class AuthService
             throw new ModelNotFoundException('User not found');
         }
 
-        return $this->mapUserToDto($user);
+        return $this->mapUserToDto($user)->toArray(); // возвращаем массив
+//        return $this->mapUserToDto($user);
     }
 
     public function updateUser(int $userId, array $data, ?\Illuminate\Http\UploadedFile $avatar = null): UserDto
@@ -94,7 +98,8 @@ class AuthService
         $this->userRepository->updateUser($userId, $data);
         $user = $this->userRepository->findUserById($userId);
 
-        return $this->mapUserToDto($user);
+        return $this->mapUserToDto($user)->toArray(); // возвращаем массив
+//        return $this->mapUserToDto($user);
     }
 
     private function mapUserToDto(User $user): UserDto

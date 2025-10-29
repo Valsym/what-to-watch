@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Queue\Events\JobFailed;
 use App\Repositories\Auth\UserRepository;
 use App\Services\Auth\AuthService;
+use App\Repositories\Genres\GenreRepository;
+use App\Services\Genres\GenreService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -46,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
 //                return new GuzzleAdapter(new Client());
 //            }
 //        );
+
         // Auth
         $this->app->bind(UserRepository::class, function ($app) {
             return new UserRepository(new \App\Models\User());
@@ -76,6 +79,15 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(FavoriteRepository::class, function ($app) {
             return new FavoriteRepository();
+        });
+
+        // Genres
+        $this->app->bind(GenreRepository::class, function ($app) {
+            return new GenreRepository(new \App\Models\Genre());
+        });
+
+        $this->app->bind(GenreService::class, function ($app) {
+            return new GenreService($app->make(GenreRepository::class));
         });
 
     }

@@ -2,52 +2,41 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Resources\GenreResource;
+use App\Http\Requests\Genre\UpdateGenreRequest;
 use App\Http\Responses\Success;
-use App\Models\Genre;
+use App\Services\Genres\GenreService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class GenreController extends Controller
 {
+    public function __construct(private GenreService $genreService) {}
+
     /**
-     * Список жанров
-     *
-     * @return Success
+     * Получение списка жанров
      */
     public function index(): Success
     {
-        $genres = Genre::all();
+        $genres = $this->genreService->getAllGenres();
 
-        return $this->success(GenreResource::collection($genres));
-
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function insert(Request $request, $id)
-    {
-        return $this->success([]);
+        return $this->success($genres);
     }
 
     /**
      * Обновление жанра
-     *
-     * @param Request $request
-     * @param $id
-     * @return Success
      */
-    public function update(Request $request, int $id): Success
+    public function update(UpdateGenreRequest $request, int $id): Success
     {
-        $genre = Genre::findOrFail($id);
+        $genre = $this->genreService->updateGenre($id, $request->input('name'));
 
-        $genre->update($request->only('name'));
-
-        return $this->success(new GenreResource($genre));
+        return $this->success($genre);
     }
 
+    /**
+     * @deprecated Этот метод больше не используется
+     */
+    public function insert(Request $request, $id): Success
+    {
+        return $this->success([]);
+    }
 }
