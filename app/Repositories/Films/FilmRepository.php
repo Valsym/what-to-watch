@@ -201,4 +201,10 @@ class FilmRepository
             ->limit($limit)
             ->get();
     }
+
+    public function filmExists(int $filmId): bool
+    {
+        return $this->film->where('id', $filmId)->exists();
+    }
+
 }

@@ -8,6 +8,7 @@ use App\Models\Comment;
 use App\Models\Genre;
 use App\Models\User;
 //use App\Repositories\Films\FilmsOmdbRepository;
+use App\Repositories\Favorites\FavoriteRepository;
 use App\Repositories\Films\FilmRepository;
 use App\Services\Films\FilmService;
 use App\Services\Films\OmdbService;
@@ -53,13 +54,19 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(FilmService::class, function ($app) {
             return new FilmService(
                 $app->make(FilmRepository::class),
-                $app->make(OmdbService::class) // Добавляем второй обязательный аргумент
+                $app->make(OmdbService::class), // Добавляем второй обязательный аргумент
+                $app->make(FavoriteRepository::class)
             );
         });
 
         $this->app->bind(OmdbService::class, function ($app) {
             return new OmdbService(/* необходимые зависимости */);
         });
+
+        $this->app->bind(FavoriteRepository::class, function ($app) {
+            return new FavoriteRepository();
+        });
+
     }
 
     /**

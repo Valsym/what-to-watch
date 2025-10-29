@@ -6,6 +6,7 @@ namespace App\Services\Films;
 //use App\Repositories\FilmRepository;
 use App\DTOs\CreateFilmData;
 use App\DTOs\FilmListQueryParams;
+use App\DTOs\Films\FilmDto;
 use App\DTOs\Films\SimilarFilmDto;
 use App\DTOs\UpdateFilmData;
 use App\Jobs\FetchFilmDataFromOmdbJob;
@@ -14,12 +15,14 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use App\Http\Resources\FilmListResource;
 use App\Http\Resources\FilmResource;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use app\Repositories\Favorites\FavoriteRepository;
 
 class FilmService
 {
     public function __construct(
         private FilmRepository $filmRepository,
-        private OmdbService $omdbService
+        private OmdbService $omdbService,
+        private FavoriteRepository $favoriteRepository
     ) {}
 
     public function getFilmsList(FilmListQueryParams $params): array
@@ -125,5 +128,52 @@ class FilmService
                 is_favorite: $film->is_favorite ?? false,
             );
         })->toArray();
+    }
+
+    public function getUserFavorites(int $userId): array
+    {
+        $films = $this->favoriteRepository->getUserFavorites($userId);
+
+        return $films->map(function ($film) use ($userId) {
+            return new FilmDto(
+                id: $film->id,
+                name: $film->name,
+                poster_image: $film->poster_image,
+                preview_image: $film->preview_image,
+                background_image: $film->background_image,
+                background_color: $film->background_color,
+                video_link: $film->video_link,
+                preview_video_link: $film->preview_video_link,
+                description: $film->description,
+                rating: $film->rating,
+//                scores_count: $film->scores_count,
+                director: $film->director,
+                starring: $film->starring ?? [],
+                run_time: $film->run_time,
+                genre: $film->genres->pluck('name')->toArray(),
+                released: $film->released,
+                is_favorite: true, // Всегда true для избранных
+            );
+        })->toArray();
+    }
+
+    public function addToFavorites(int $userId, int $filmId): void
+    {
+        // Проверяем существование фильма
+        if (!$this->filmRepository->filmExists($filmId)) {
+            throw new ModelNotFoundException('Film not found');
+        }
+
+        $this->favoriteRepository->addToFavorites($userId, $filmId);
+    }
+
+    public function removeFromFavorites(int $userId, int $filmId): void
+    {
+        // Проверяем существование фильма
+        if (!$this->filmRepository->filmExists($filmId)) {
+            throw new ModelNotFoundException('Film not found');
+        }
+
+        $this->favoriteRepository->removeFromFavorites($userId, $filmId);
     }
 }
