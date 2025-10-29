@@ -61,13 +61,21 @@ Route::middleware('auth:sanctum')->post('/films/{film}/favorite', [FavoriteContr
 Route::middleware('auth:sanctum')->delete('/films/{film}/favorite', [FavoriteController::class, 'destroy'])->name('favorite.destroy');
 Route::get ('/favorite/{film}/status', [FavoriteController::class, 'status'])->name('favorite.status');
 
+// Комментарии
 Route::get('films/{film}/comments', [CommentController::class, 'index'])->name('comments.index');
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('films/{film}/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::patch('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 });
-Route::middleware('auth:sanctum')->delete('/comments/{comment}', [CommentController::class, 'destroy'])
-    ->name('comments.destroy');
+
+//Route::get('films/{film}/comments', [CommentController::class, 'index'])->name('comments.index');
+//Route::middleware('auth:sanctum')->group(function () {
+//    Route::post('films/{film}/comments', [CommentController::class, 'store'])->name('comments.store');
+//    Route::patch('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
+//});
+//Route::middleware('auth:sanctum')->delete('/comments/{comment}', [CommentController::class, 'destroy'])
+//    ->name('comments.destroy');
 
 Route::prefix('/promo')->group(function () {
     Route::get('/', [FilmController::class, 'showPromo'])->name('promo.show');

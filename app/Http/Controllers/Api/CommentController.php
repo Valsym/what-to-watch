@@ -4,31 +4,26 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Comments\StoreCommentRequest;
 use App\Http\Requests\Comments\UpdateCommentRequest;
-use App\Http\Resources\CommentResource;
-use App\Http\Responses\Fail;
+use App\DTO\Comments\StoreCommentDto;
+use App\DTO\Comments\UpdateCommentDto;
 use App\Http\Responses\Success;
-use App\Models\Comment;
+use App\Services\Comments\CommentService;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\JsonResponse;
 
 class CommentController extends Controller
 {
+    public function __construct(private CommentService $commentService) {}
+
     /**
-     * Display a listing of the resource.
-     *
+     * @param int $filmId
      * @return Success
      */
-    public function index(int $filmId)
+    public function index(int $filmId): Success
     {
-//        $comments = Comment::where('film_id', $filmId)->get();
-        $comments = Comment::with('user') // ← важно!
-        ->where('film_id', $filmId)
-            ->get();
+        $comments = $this->commentService->getFilmComments($filmId);
 
-//        return $this->success($comments, 201);
-        return $this->success(CommentResource::collection($comments));
+        return $this->success($comments);
     }
 
     /**
@@ -39,108 +34,67 @@ class CommentController extends Controller
      *
      * @return Success
      */
-    public function store(StoreCommentRequest $request, $filmId): Success
+    public function store(StoreCommentRequest $request, int $filmId): Success
     {
-        $comment = Comment::create([
-            'film_id' => $filmId,
-            'user_id' => auth()->id(),
-            'text' => $request->text,
-            'rating' => $request->rating,
-        ]);
+        $storeCommentDto = new StoreCommentDto(
+            text: $request->input('text'),
+            rating: $request->input('rating'),
+            film_id: $filmId,
+            user_id: auth()->id(),
+            parent_id: $request->input('comment_id')
+        );
 
-        // Загружаем отношения
-        $comment->load('user');
+        $comment = $this->commentService->createComment($storeCommentDto);
 
-        return $this->success(new CommentResource($comment), 201);
-//        return $this->success($comment, 201);
+        return $this->success($comment->toArray(), 201);
     }
 
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  UpdateCommentRequest  $request
      * @param  int  $id
-     * @return Success
+     * @return JsonResponse
      */
-    public function update(UpdateCommentRequest $request, $id): Success
+    public function update(UpdateCommentRequest $request, int $id): Success
     {
-        $user = Auth::user();
-        $comment = Comment::find($id)->first();
+        try {
+            $updateCommentDto = new UpdateCommentDto(
+                text: $request->input('text'),
+                rating: $request->input('rating')
+            );
 
-        if ($user->isModerator() || (int)$user->id === $comment->user_id){
-        //Gate::allows('update-comment', $comment)){
-            $comment->update([
-                'id' => $id,
-                'text' => $request->text,
-                'rating' => $request->rating,
-            ]);
+            $user = auth()->user();
+            $comment = $this->commentService->updateComment(
+                $id,
+                $updateCommentDto,
+                $user->id,
+                $user->isModerator()
+            );
 
-//            return $this->success($comment, 201);
-            return $this->success(new CommentResource($comment), 200);
+            return $this->success($comment->toArray());
+        } catch (AuthorizationException $e) {
+            abort(403, $e->getMessage());
         }
-
-        // Обычный юзер не имеет доступа к редактированию комментария
-        abort(403, 'Комментарий может редактировать только его автор или Модератор');
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param  int  $id
-     * @return Success
+     * @return JsonResponse
      */
-    public function destroy($id)
+    public function destroy(int $id): Success
     {
-        $user = Auth::user();
-        $comment = Comment::find($id)->first();
+        try {
+            $user = auth()->user();
+            $this->commentService->deleteComment($id, $user->id, $user->isModerator());
 
-        if (Gate::allows('comment-delete', $comment)){
-            // Юзер авторизован для выполнения этого действия
-            if ($comment->replies()->exists()) {
-                if($user->isModerator()) {
-                    $comment->replies()->delete();
-                    $comment->delete();
-
-                    return $this->success([], 204);
-                }
-                throw new AuthorizationException('Нельзя удалить комментарий с ответами');
-
-            }
-
-            $comment->delete();
-
-            return $this->success([], 204);
-
-        } else if ($user->id === $comment->user_id && $comment->replies()->exists()) {
-            abort(403, 'Нельзя удалить комментарий с ответами');
+            return $this->success(null, 204);
+        } catch (AuthorizationException $e) {
+            abort(403, $e->getMessage());
         }
-        // Юзер не имеет доступа к удалению комментария
-        abort(403, 'Комментарий может удалить только его автор или Модератор');
-
-
-        // Либо так (без Гейта)
-        if($user->isModerator() || $user->id === $comment->user_id) {
-
-            if (Comment::destroy($id)) {
-                return $this->success([]);
-            } else {
-                return new Fail(
-                    message: "Не удалось удалить комментарий user_id=$user->id coment_id=$id",
-                    data: [
-                        'id' => ['Неверный id.'],
-                    ],
-                    code: Response::HTTP_CONFLICT
-                );
-            }
-        }
-
-        return new Fail(
-            message: "Комментарий может удалить только его автор или Модератор",
-            data: [],
-            code: Response::HTTP_BAD_REQUEST
-        );
-
-
     }
+
 }

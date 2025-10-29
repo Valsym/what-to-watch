@@ -23,6 +23,8 @@ use App\Repositories\Auth\UserRepository;
 use App\Services\Auth\AuthService;
 use App\Repositories\Genres\GenreRepository;
 use App\Services\Genres\GenreService;
+use App\Repositories\Comments\CommentRepository;
+use App\Services\Comments\CommentService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -88,6 +90,15 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(GenreService::class, function ($app) {
             return new GenreService($app->make(GenreRepository::class));
+        });
+
+        // Comments
+        $this->app->bind(CommentRepository::class, function ($app) {
+            return new CommentRepository(new \App\Models\Comment());
+        });
+
+        $this->app->bind(CommentService::class, function ($app) {
+            return new CommentService($app->make(CommentRepository::class));
         });
 
     }

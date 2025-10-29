@@ -6,6 +6,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreCommentRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return auth()->check();
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -15,7 +20,7 @@ class StoreCommentRequest extends FormRequest
     {
         return [
             'text' => 'required|string|min:50|max:400',
-            'rating' => 'required|min:1|max:10',
+            'rating' => 'required|integer|min:1|max:10',
             'comment_id' => 'nullable|exists:comments,id'
         ];
     }
@@ -35,8 +40,6 @@ class StoreCommentRequest extends FormRequest
             'rating.min' => 'Оценка должна быть не менее 1',
             'rating.max' => 'Оценка должна быть не более 10',
             'comment_id.exists' => 'Родительский комментарий не найден',
-            'film_id.required' => 'Не указан фильм',
-            'film_id.exists' => 'Указанный фильм не найден'
         ];
     }
 }
