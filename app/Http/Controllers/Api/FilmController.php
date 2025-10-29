@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\DTOs\CreateFilmData;
-use App\DTOs\FilmListQueryParams;
-use App\DTOs\UpdateFilmData;
+use App\DTO\CreateFilmData;
+use App\DTO\FilmListQueryParams;
+use App\DTO\UpdateFilmData;
 use App\Http\Requests\Films\FilmsListRequest;
 use App\Http\Requests\Films\StoreFilmRequest;
 use App\Http\Requests\Films\UpdateFilmRequest;

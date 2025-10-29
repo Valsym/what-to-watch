@@ -3,10 +3,10 @@
 
 namespace App\Repositories\Films;
 
-use App\DTOs\CreateFilmData;
-use App\DTOs\UpdateFilmData;
+use App\DTO\CreateFilmData;
+use App\DTO\UpdateFilmData;
 use App\Models\Film;
-use App\DTOs\FilmListQueryParams;
+use App\DTO\FilmListQueryParams;
 use App\Models\Genre;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;

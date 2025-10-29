@@ -4,11 +4,11 @@
 namespace App\Services\Films;
 
 //use App\Repositories\FilmRepository;
-use App\DTOs\CreateFilmData;
-use App\DTOs\FilmListQueryParams;
-use App\DTOs\Films\FilmDto;
-use App\DTOs\Films\SimilarFilmDto;
-use App\DTOs\UpdateFilmData;
+use App\DTO\CreateFilmData;
+use App\DTO\FilmListQueryParams;
+use App\DTO\Films\FilmDto;
+use App\DTO\Films\SimilarFilmDto;
+use App\DTO\UpdateFilmData;
 use App\Jobs\FetchFilmDataFromOmdbJob;
 use App\Repositories\Films\FilmRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;

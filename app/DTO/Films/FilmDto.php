@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTOs\Films;
+namespace App\DTO\Films;
 
 class FilmDto
 {

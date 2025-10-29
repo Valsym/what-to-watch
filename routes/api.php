@@ -19,16 +19,27 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
+// Аутентификация
 Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
 Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
-Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
-Route::prefix('/user')->middleware('auth:sanctum')->group(function () {
-    Route::get('/', [UserController::class, 'index'])->name('user.index');
-    Route::get('/{user}', [UserController::class, 'show'])->name('user.show');
-    Route::/*middleware('is_moderator')->*/patch('/', [UserController::class, 'update'])->name('user.update');
+// Защищенные маршруты
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
+    Route::get('/user', [UserController::class, 'show'])->name('user.show');
+    Route::patch('/user', [UserController::class, 'update'])->name('user.update');
+//    Route::get('/user', [UserController::class, 'index'])->name('user.index');
 });
+
+//Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
+//Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
+//Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
+//
+//Route::prefix('/user')->middleware('auth:sanctum')->group(function () {
+//    Route::get('/', [UserController::class, 'index'])->name('user.index');
+//    Route::get('/{user}', [UserController::class, 'show'])->name('user.show');
+//    Route::/*middleware('is_moderator')->*/patch('/', [UserController::class, 'update'])->name('user.update');
+//});
 
 Route::get('/films/{film}/similar', [FilmController::class, 'similar'])->name('films.similar');
 

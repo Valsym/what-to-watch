@@ -5,62 +5,46 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Api\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
-use App\Models\User;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Auth;
-//use App\Services\AuthService;
+use App\DTO\Auth\LoginDto;
+use App\DTO\Auth\RegisterDto;
+use App\Http\Responses\Success;
+use App\Services\Auth\AuthService;
+use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
-    /**
-     * Регистрация юзера
-     *
-     * @return Response
-     */
-    public function register(RegisterRequest $request)
-    {
-        $params = $request->safe()->except('file');
-        $user = User::create($params);
-        $token = $user->createToken('auth_token');
+    public function __construct(private AuthService $authService) {}
 
-        return $this->success([
-            'user' => $user,
-            'token' => $token->plainTextToken,
-        ], 201);
+    public function register(RegisterRequest $request): Success
+    {
+        $registerDto = new RegisterDto(
+            name: $request->input('name'),
+            email: $request->input('email'),
+            password: $request->input('password'),
+            avatar: $request->file('file')
+        );
+
+        $result = $this->authService->register($registerDto);
+
+        return $this->success($result, 201);
     }
 
-    /**
-     * Сообщения об ошибках валидации.
-     *
-     * @param LoginRequest $request
-     * @return \App\Http\Responses\Success
-     */
-        public function login(LoginRequest $request)
+    public function login(LoginRequest $request): Success
     {
-        if (!Auth::attempt($request->validated())) {
-            abort(401, trans('login.failed'));
-//            throw new UnauthorizedHttpException('', 'Неверный email или пароль.');
-        }
+        $loginDto = new LoginDto(
+            email: $request->input('email'),
+            password: $request->input('password')
+        );
 
-        $token = Auth::user()->createToken('auth_token');
+        $token = $this->authService->login($loginDto);
 
-        return $this->success(['token' => $token->plainTextToken]);
+        return $this->success(['token' => $token->token]);
     }
 
-
-    /**
-     * logout
-     *
-     * @return \App\Http\Responses\Success
-     */
-
-    public function logout()
+    public function logout(): Success
     {
-        $user = Auth::user();
-        Auth::user()->tokens()->delete();
+        $this->authService->logout(auth()->id());
 
         return $this->success(null, 204);
     }
-
-
 }

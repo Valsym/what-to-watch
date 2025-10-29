@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTOs;
+namespace App\DTO;
 
 use App\Http\Requests\Films\StoreFilmRequest;
 

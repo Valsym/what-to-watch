@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Queue\Events\JobFailed;
+use App\Repositories\Auth\UserRepository;
+use App\Services\Auth\AuthService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,6 +46,15 @@ class AppServiceProvider extends ServiceProvider
 //                return new GuzzleAdapter(new Client());
 //            }
 //        );
+        // Auth
+        $this->app->bind(UserRepository::class, function ($app) {
+            return new UserRepository(new \App\Models\User());
+        });
+
+        $this->app->bind(AuthService::class, function ($app) {
+            return new AuthService($app->make(UserRepository::class));
+        });
+
         $this->app->bind(FilmRepository::class, function ($app) {
             return new FilmRepository(
                 new Film(),
