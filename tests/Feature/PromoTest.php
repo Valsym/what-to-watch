@@ -2,27 +2,19 @@
 
 namespace Tests\Feature;
 
-use App\Models\Comment;
 use App\Models\Film;
-use App\Models\Genre;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Arr;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class PromoTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * Тест получения текущего промо-фильма.
-     *
-     * @return void
-     */
     public function testShowPromo(): void
     {
         $promoFilm = Film::factory()->create(['promo' => true]);
+
         $response = $this->getJson(route('promo.show'));
 
         $response->assertOk()
@@ -34,40 +26,82 @@ class PromoTest extends TestCase
             ]);
     }
 
-    /**
-     * Тест создания промо-фильма модератором.
-     *
-     * @return void
-     */
+    public function testShowPromoNotFound(): void
+    {
+        // Не создаем промо-фильм
+        Film::factory()->create(['promo' => false]);
+
+        $response = $this->getJson(route('promo.show'));
+
+        $response->assertNotFound()
+            ->assertJson([
+                'message' => 'Promo film not found'
+            ]);
+    }
+
     public function testCreatePromo(): void
     {
         $moderator = User::factory()->create([
             'role' => User::ROLE_MODERATOR,
         ]);
-        $film = Film::factory()->create();
+        $film = Film::factory()->create(['promo' => false]);
 
-        $response = $this->actingAs($moderator)->postJson(route('promo.create', $film->id));
+        $response = $this->actingAs($moderator)
+            ->postJson(route('promo.create', $film->id));
 
         $response->assertOk()
-            ->assertJsonStructure(['data']);
+            ->assertJson([
+                'data' => [
+                    'id' => $film->id,
+                    'promo' => true
+                ]
+            ]);
+
+        $this->assertDatabaseHas('films', [
+            'id' => $film->id,
+            'promo' => true
+        ]);
     }
 
-    /**
-     * Тест ошибки 403 при попытке создать промо-фильм обычным пользователем.
-     */
+    public function testCreatePromoResetsOtherPromos(): void
+    {
+        $moderator = User::factory()->create([
+            'role' => User::ROLE_MODERATOR,
+        ]);
+
+        // Создаем существующий промо-фильм
+        $oldPromo = Film::factory()->create(['promo' => true]);
+        $newPromo = Film::factory()->create(['promo' => false]);
+
+        $response = $this->actingAs($moderator)
+            ->postJson(route('promo.create', $newPromo->id));
+
+        $response->assertOk();
+
+        // Проверяем, что новый фильм стал промо
+        $this->assertDatabaseHas('films', [
+            'id' => $newPromo->id,
+            'promo' => true
+        ]);
+
+        // Проверяем, что старый промо-фильм больше не промо
+        $this->assertDatabaseHas('films', [
+            'id' => $oldPromo->id,
+            'promo' => false
+        ]);
+    }
+
     public function testCreatePromoAsUser(): void
     {
         $user = User::factory()->create();
         $film = Film::factory()->create();
 
-        $response = $this->actingAs($user)->postJson(route('promo.create', $film->id));
+        $response = $this->actingAs($user)
+            ->postJson(route('promo.create', $film->id));
 
         $response->assertForbidden();
     }
 
-    /**
-     * Тест ошибки 401 при попытке создать промо-фильм без авторизации.
-     */
     public function testCreatePromoUnauthenticated(): void
     {
         $film = Film::factory()->create();
@@ -77,4 +111,18 @@ class PromoTest extends TestCase
         $response->assertUnauthorized();
     }
 
+    public function testCreatePromoFilmNotFound(): void
+    {
+        $moderator = User::factory()->create([
+            'role' => User::ROLE_MODERATOR,
+        ]);
+
+        $response = $this->actingAs($moderator)
+            ->postJson(route('promo.create', 999));
+
+        $response->assertNotFound()
+            ->assertJson([
+                'message' => 'Film not found'
+            ]);
+    }
 }

@@ -6,6 +6,7 @@ use App\DTO\CreateFilmData;
 use App\DTO\FilmListQueryParams;
 use App\DTO\UpdateFilmData;
 use App\Http\Requests\Films\FilmsListRequest;
+use App\Http\Requests\Films\SetPromoRequest;
 use App\Http\Requests\Films\StoreFilmRequest;
 use App\Http\Requests\Films\UpdateFilmRequest;
 use App\Http\Resources\FilmListResource;
@@ -33,10 +34,10 @@ class FilmController extends Controller
 {
     public function __construct(
         private FilmService $filmService,
-        protected FilmListService $filmListService,
-        protected FilmCreateService $filmCreateService,
-        protected FilmUpdateService $filmUpdateService,
-        protected FilmRepository $filmRepository,
+//        protected FilmListService $filmListService,
+//        protected FilmCreateService $filmCreateService,
+//        protected FilmUpdateService $filmUpdateService,
+//        protected FilmRepository $filmRepository,
 //        protected RequestFactoryInterface $httpFactory,
 //        protected ClientInterface $httpClient
 //        private \Psr\Http\Client\ClientInterface $httpClient
@@ -112,17 +113,7 @@ class FilmController extends Controller
      *
      * @param Film $film
      * @return \App\Http\Responses\Success
-     */
-    public function similar0(int $id, FilmService $service)
-    {
-        $film = Film::findOrFail($id);
-        $films = $service->getSimilarFor($film, Film::LIST_FIELDS);
-
-        return $this->success(FilmListResource::collection($films));
-//        return $this->success($service->getSimilarFor($film, Film::LIST_FIELDS));
-    }
-
-    /**
+     *
      * @OA\Get(
      *     path="/api/films/{id}/similar",
      *     summary="Get similar films",
@@ -154,9 +145,68 @@ class FilmController extends Controller
             ]);
         } catch (ModelNotFoundException $e) {
             return $this->notFound();
-//            return response()->json([
-//                'message' => 'Film not found'
-//            ], 404);
+        }
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/promo",
+     *     summary="Get promo film",
+     *     tags={"Promo"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Promo film data",
+     *         @OA\JsonContent(ref="#/components/schemas/Film")
+     *     ),
+     *     @OA\Response(response=404, description="Promo film not found")
+     * )
+     */
+    public function showPromo(): Success|JsonResponse
+    {
+        $promoFilm = $this->filmService->getPromoFilm();
+
+        if (!$promoFilm) {
+            return response()->json([
+                'message' => 'Promo film not found'
+            ], 404);
+        }
+
+        return $this->success($promoFilm);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/promo/{id}",
+     *     summary="Set promo film",
+     *     tags={"Promo"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Film ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Promo film set successfully",
+     *         @OA\JsonContent(ref="#/components/schemas/Film")
+     *     ),
+     *     @OA\Response(response=404, description="Film not found"),
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=401, description="Unauthenticated")
+     * )
+     */
+    public function setPromo(SetPromoRequest $request, int $id): Success|JsonResponse
+    {
+        try {
+            $film = $this->filmService->setPromoFilm($id);
+
+            return $this->success($film);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Film not found'
+            ], 404);
         }
     }
 
@@ -165,16 +215,16 @@ class FilmController extends Controller
      *
      * @return Success
      */
-    public function showPromo(): Success
-    {
-        $film = Film::where('promo', true)
-            ->with(['genres'])//, 'actors', 'directors'])
-            ->firstOrFail();
-
-//        $this->setFavoriteFlag($film);
-
-        return $this->success(new FilmResource($film));
-    }
+//    public function showPromo(): Success
+//    {
+//        $film = Film::where('promo', true)
+//            ->with(['genres'])//, 'actors', 'directors'])
+//            ->firstOrFail();
+//
+////        $this->setFavoriteFlag($film);
+//
+//        return $this->success(new FilmResource($film));
+//    }
 
     /**
      * Создание промо
@@ -184,17 +234,17 @@ class FilmController extends Controller
      * @return Success
      * @throws Throwable
      */
-    public function createPromo($filmId): Success
-    {
-        DB::transaction(
-            function () use ($filmId) {
-                $this->filmRepository->resetPromoFlags();
-                $this->filmRepository->setPromoFlag($filmId);
-            }
-        );
-
-        $film = $this->filmRepository->findOrFail($filmId);
-
-        return $this->success(new FilmResource($film));
-    }
+//    public function createPromo($filmId): Success
+//    {
+//        DB::transaction(
+//            function () use ($filmId) {
+//                $this->filmRepository->resetPromoFlags();
+//                $this->filmRepository->setPromoFlag($filmId);
+//            }
+//        );
+//
+//        $film = $this->filmRepository->findOrFail($filmId);
+//
+//        return $this->success(new FilmResource($film));
+//    }
 }

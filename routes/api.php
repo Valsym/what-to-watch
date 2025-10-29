@@ -77,9 +77,15 @@ Route::middleware('auth:sanctum')->group(function () {
 //Route::middleware('auth:sanctum')->delete('/comments/{comment}', [CommentController::class, 'destroy'])
 //    ->name('comments.destroy');
 
-Route::prefix('/promo')->group(function () {
-    Route::get('/', [FilmController::class, 'showPromo'])->name('promo.show');
-    Route::post('/promo/{id}', [FilmController::class, 'createPromo'])->
-        middleware('auth:sanctum', 'is_moderator')->
-        name('promo.create');
-});
+// Промо-фильмы
+Route::get('/promo', [FilmController::class, 'showPromo'])->name('promo.show');
+Route::post('/promo/{id}', [FilmController::class, 'setPromo'])
+    ->middleware('auth:sanctum')
+    ->name('promo.create');
+
+//Route::prefix('/promo')->group(function () {
+//    Route::get('/', [FilmController::class, 'showPromo'])->name('promo.show');
+//    Route::post('/promo/{id}', [FilmController::class, 'createPromo'])->
+//        middleware('auth:sanctum', 'is_moderator')->
+//        name('promo.create');
+//});

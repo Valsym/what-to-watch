@@ -207,4 +207,24 @@ class FilmRepository
         return $this->film->where('id', $filmId)->exists();
     }
 
+    public function getPromoFilm(): ?Film
+    {
+        return $this->film
+            ->where('promo', true)
+            ->with(['genres'])
+            ->first();
+    }
+
+    public function setPromoFilm(int $filmId): Film
+    {
+        // Сбрасываем все промо-флаги
+        $this->film->where('promo', true)->update(['promo' => false]);
+
+        // Устанавливаем новый промо-фильм
+        $film = $this->film->findOrFail($filmId);
+        $film->update(['promo' => true]);
+
+        return $film->fresh(['genres']);
+    }
+
 }

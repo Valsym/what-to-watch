@@ -10,6 +10,7 @@ use App\DTO\Films\FilmDto;
 use App\DTO\Films\SimilarFilmDto;
 use App\DTO\UpdateFilmData;
 use App\Jobs\FetchFilmDataFromOmdbJob;
+use App\Models\Film;
 use App\Repositories\Films\FilmRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use App\Http\Resources\FilmListResource;
@@ -175,5 +176,52 @@ class FilmService
         }
 
         $this->favoriteRepository->removeFromFavorites($userId, $filmId);
+    }
+
+    public function getPromoFilm(): ?array
+    {
+        $film = $this->filmRepository->getPromoFilm();
+
+        if (!$film) {
+//            throw new ModelNotFoundException('Запрашиваемая страница не существует');
+            return null;
+        }
+
+        return $this->mapFilmToDto($film)->toArray();
+    }
+
+    public function setPromoFilm(int $filmId): array
+    {
+        // Проверяем существование фильма
+        if (!$this->filmRepository->filmExists($filmId)) {
+            throw new ModelNotFoundException('Film not found');
+        }
+
+        $film = $this->filmRepository->setPromoFilm($filmId);
+        return $this->mapFilmToDto($film)->toArray();
+    }
+
+    private function mapFilmToDto(Film $film): FilmDto
+    {
+        return new FilmDto(
+            id: $film->id,
+            name: $film->name,
+            poster_image: $film->poster_image,
+            preview_image: $film->preview_image,
+            background_image: $film->background_image,
+            background_color: $film->background_color,
+            video_link: $film->video_link,
+            preview_video_link: $film->preview_video_link,
+            description: $film->description,
+            rating: $film->rating,
+//            scores_count: $film->scores_count,
+            director: $film->director,
+            starring: $film->starring ?? [],
+            run_time: $film->run_time,
+            genre: $film->genres->pluck('name')->toArray(),
+            released: $film->released,
+            is_favorite: $film->is_favorite ?? false,
+            promo: $film->promo,
+        );
     }
 }
