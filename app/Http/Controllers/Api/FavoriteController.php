@@ -18,65 +18,6 @@ class FavoriteController extends Controller
 {
     public function __construct(private FilmService $filmService) {}
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return Success
-     */
-    public function index0()
-    {
-        $perPage = 8;
-
-        $favorites = FavoriteFilm::where('user_id', auth()->id())->
-            with('film')->latest()->paginate($perPage);
-
-        $items = collect($favorites->items());
-        $formatted = $items->map(
-            function ($favorite) {
-                $film = $favorite->film;
-                $film->is_favorite = true;
-                $film->added_at = $favorite->created_at->format('Y-m-d H:i:s');
-                return new filmResource($film);
-            }
-        );
-
-        return $this->success(FilmListResource::collection($formatted));
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store0(int $filmId): Success|ErrorResponse
-    {
-        Film::findOrFail($filmId);
-
-        $show = $this->show($filmId);
-
-        if($show->statusCode === 200) {
-//            return $this->success(['message' => 'Фильм уже в избранном'], 200);
-            return $this->error('Фильм уже в избранном', [], 401);
-        }
-
-        $userId = auth()->id();
-
-        $favorite = new FavoriteFilm();
-        $favorite->user_id = $userId;
-        $favorite->film_id = $filmId;
-        $favorite->save();
-        // or
-//        FavoriteFilm::create(
-//            [
-//                'user_id' => $usrId,
-//                'film_id' => $filmId,
-//            ]
-//        );
-
-        return $this->success(['message' =>
-            "Фильм успешно добавлен в избранное!"], 201);
-    }
 
     /**
      * Display the specified resource.
@@ -107,37 +48,7 @@ class FavoriteController extends Controller
         return $this->success([], 201);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy0($filmId)
-    {
-//        dump($this->show($filmId));
-
-        if($this->show($filmId)->statusCode !== 200) {
-            return $this->success(['message' =>
-                'Фильм уже отсутствует в избранном'], 201);
-        }
-
-        $favoriteFilm = FavoriteFilm::where('film_id', $filmId)->first();
-        $favoriteFilm->delete();
-//        FavoriteFilm::destroy($favoriteFilm->id);
-
-        if($this->show($filmId)->statusCode !== 200) {
-            return $this->success(['message' =>
-                'Фильм успешно удален из избранного!'], 201);
-        }
-
-        return $this->error(
-            'Не удалось удалить фильм из избранного',
-            [], 404);
-
-    }
-
-    /**
+        /**
      * Display the specified resource.
      *
      * @param  int  $id

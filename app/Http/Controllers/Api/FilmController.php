@@ -97,15 +97,24 @@ class FilmController extends Controller
      */
     public function show(int $id)
     {
-        $filmDetails = $this->filmService->getFilmDetails($id);
+        try {
+            $userId = auth()->id(); // Получаем ID текущего пользователя
+            $film = $this->filmService->getFilm($id, $userId);
 
-        if (!$filmDetails) {
-            return $this->notFound(); // или $this->notFound('Фильм не найден')
+            return $this->success($film);
+        } catch (ModelNotFoundException $e) {
+            return $this->notFound();
+//            return response()->json(['message' => 'Film not found'], 404);
+        }
+//        $filmDetails = $this->filmService->getFilmDetails($id);
+//
+//        if (!$filmDetails) {
+//            return $this->notFound(); // или $this->notFound('Фильм не найден')
 //            return $this->error('Фильм не найден', 404);
 //            return $this->error('Запрашиваемая страница не существует', [], 404);
-        }
-
-        return $this->success($filmDetails);
+//        }
+//
+//        return $this->success($filmDetails);
     }
 
     /**

@@ -154,6 +154,7 @@ class FilmService
                 genre: $film->genres->pluck('name')->toArray(),
                 released: $film->released,
                 is_favorite: true, // Всегда true для избранных
+                promo: $this->promo ?? 0,
             );
         })->toArray();
     }
@@ -176,6 +177,19 @@ class FilmService
         }
 
         $this->favoriteRepository->removeFromFavorites($userId, $filmId);
+    }
+
+    public function getFilm(int $id, ?int $userId = null): array
+    {
+        $film = $this->filmRepository->findByIdOrFail($id);//findOrFail($id);
+
+        // Вычисляем is_favorite для конкретного пользователя
+        $isFavorite = false;
+        if ($userId) {
+            $isFavorite = $this->favoriteRepository->isFilmInFavorites($userId, $id);
+        }
+
+        return $this->mapFilmToDto($film, $isFavorite)->toArray();
     }
 
     public function getPromoFilm(): ?array
@@ -201,7 +215,8 @@ class FilmService
         return $this->mapFilmToDto($film)->toArray();
     }
 
-    private function mapFilmToDto(Film $film): FilmDto
+    // Обновляем метод mapFilmToDto для приема is_favorite
+    private function mapFilmToDto(Film $film, bool $isFavorite = false): FilmDto
     {
         return new FilmDto(
             id: $film->id,
@@ -220,7 +235,7 @@ class FilmService
             run_time: $film->run_time,
             genre: $film->genres->pluck('name')->toArray(),
             released: $film->released,
-            is_favorite: $film->is_favorite ?? false,
+            is_favorite: $isFavorite, // Используем переданное значение
             promo: $film->promo,
         );
     }

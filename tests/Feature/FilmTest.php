@@ -121,10 +121,10 @@ class FilmTest extends TestCase
         Film::factory($count)->create(['released' => 1990]); // Другие года
 
         // Добавим проверку количества фильмов в базе
-        $totalFilms = Film::count();
-        $filmsWithGenreCount = Film::whereHas('genres', function ($query) use ($genre) {
-            $query->where('name', $genre->name);
-        })->count();
+//        $totalFilms = Film::count();
+//        $filmsWithGenreCount = Film::whereHas('genres', function ($query) use ($genre) {
+//            $query->where('name', $genre->name);
+//        })->count();
 
 //        dump("Total films: " . $totalFilms);
 //        dump("Films with genre: " . $filmsWithGenreCount);
@@ -170,10 +170,12 @@ class FilmTest extends TestCase
 
         // Проверяем количество фильмов в data.data
         $filmsData = $responseData['data']['data'];
-        $this->assertCount($count > 8 ? 8 : $count, $filmsData);
+//        $this->assertCount($count > 8 ? 8 : $count, $filmsData);
+        $expectedCount = min($count, 8); // Из-за пагинации
+        $this->assertCount($expectedCount, $filmsData);
 
         // Проверяем конкретные ID в правильном порядке (по released)
-        $expectedIds = $filmsWithGenre->take($count)->pluck('id')->toArray();
+        $expectedIds = $filmsWithGenre->take($expectedCount)->pluck('id')->toArray();
         $actualIds = array_column($filmsData, 'id');
         $this->assertEquals($expectedIds, $actualIds);
 
@@ -386,22 +388,42 @@ class FilmTest extends TestCase
 
     /**
      * Проверка получения информации о фильме.
-     * Аутентифицированный пользователь должен видеть информацию о наличии фильма в избранном.
+     * Аутентифицированный пользователь должен видеть информацию
+     * о наличии фильма в избранном.
      */
     public function testGetOneFilmByUser()
     {
         $film = Film::factory()->create();
-        $user = User::factory()->hasAttached($film)->create();
+        $user = User::factory()->create();
+
+        // Добавляем фильм в избранное
+        $user->favoriteFilms()->attach($film);
+
         Sanctum::actingAs($user);
 
         $response = $this->getJson(route('film.show', $film->id));
 
-        $response->assertStatus(200);
+        $response->assertOk();
         $response->assertJsonFragment([
             'name' => $film->name,
             'is_favorite' => true,
         ]);
     }
+//    public function testGetOneFilmByUser()
+//    {
+//        $film = Film::factory()->create();
+//        $user = User::factory()->hasAttached($film)->create();
+//        Sanctum::actingAs($user);
+//
+//        $response = $this->getJson(route('film.show', $film->id));
+//        $response->dump();
+//
+//        $response->assertStatus(200);
+//        $response->assertJsonFragment([
+//            'name' => $film->name,
+//            'is_favorite' => true,// ?? false,
+//        ]);
+//    }
 
     /**
      * Заменить на обращение к несуществующему фильму

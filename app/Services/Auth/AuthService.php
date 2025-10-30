@@ -59,8 +59,8 @@ class AuthService
         Auth::login($user);
         $token = $user->createToken('auth_token');
 
-        return $token->toArray(); // возвращаем массив
-//        return new TokenDto($token->plainTextToken);
+//        return $token->toArray(); // возвращаем массив
+        return new TokenDto($token->plainTextToken);
     }
 
     public function logout(int $userId): void
@@ -71,7 +71,7 @@ class AuthService
         }
     }
 
-    public function getCurrentUser(int $userId): UserDto
+    public function getCurrentUser(int $userId): array//UserDto
     {
         $user = $this->userRepository->findUserById($userId);
         if (!$user) {
@@ -82,7 +82,7 @@ class AuthService
 //        return $this->mapUserToDto($user);
     }
 
-    public function updateUser(int $userId, array $data, ?\Illuminate\Http\UploadedFile $avatar = null): UserDto
+    public function updateUser(int $userId, array $data, ?\Illuminate\Http\UploadedFile $avatar = null): array//UserDto
     {
         if (isset($data['email'])) {
             $existingUser = $this->userRepository->findUserByEmail($data['email']);

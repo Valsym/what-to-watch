@@ -37,8 +37,11 @@ class AuthController extends Controller
         );
 
         $token = $this->authService->login($loginDto);
+        dump("function login: token=");
+//        dump($token);
 
-        return $this->success(['token' => $token->token]);
+//        return $this->success(['token' => $token->token]);
+        return $this->success($token->toArray()); // Используем toArray() для преобразования DTO в массив
     }
 
     public function logout(): Success

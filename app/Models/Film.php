@@ -144,12 +144,6 @@ class Film extends Model
             ->withTimestamps();
     }
 
-
-//    public function getIsFavoriteAttribute()
-//    {
-//        return Auth::check() && Auth::user()->hasFilm($this);
-//    }
-
     public function getIsFavoriteAttribute()
     {
         if (!auth()->check()) {

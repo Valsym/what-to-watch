@@ -109,12 +109,6 @@ class User extends Authenticatable
         return $this->belongsToMany(Film::class);
     }
 
-//    public function favoriteFilms(): BelongsToMany
-//    {
-//        return $this->belongsToMany(Film::class, 'favorite_films')
-//            ->withTimestamps();
-//    }
-
     public function favoriteFilms(): BelongsToMany
     {
         return $this->belongsToMany(Film::class, 'favorite_films')

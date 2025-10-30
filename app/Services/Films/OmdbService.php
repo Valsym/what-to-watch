@@ -10,15 +10,9 @@ class OmdbService
 {
     private string $apiKey;
     private string $baseUrl = 'http://www.omdbapi.com/';
-//    $private string $baseUrl = trim(config('services.omdb.films.url'), '/');
 
     public function __construct()
     {
-//        if (!$this->apiKey) {
-//            throw new Exception('Не найден OMDB_API_KEY');
-//        }
-
-//        $this->apiKey = $_ENV['OMDB_API_KEY'] ?? null;
         $this->apiKey = config('services.omdb.films.api_key');
     }
 
