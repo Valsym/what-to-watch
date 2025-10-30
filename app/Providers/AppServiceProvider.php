@@ -25,6 +25,8 @@ use App\Repositories\Genres\GenreRepository;
 use App\Services\Genres\GenreService;
 use App\Repositories\Comments\CommentRepository;
 use App\Services\Comments\CommentService;
+use App\Contracts\ExternalFilmRepositoryInterface;
+use App\Services\External\OmdbFilmRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -99,6 +101,18 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(CommentService::class, function ($app) {
             return new CommentService($app->make(CommentRepository::class));
+        });
+
+        // Внешние источники данных о фильмах
+        $this->app->bind(ExternalFilmRepositoryInterface::class, OmdbFilmRepository::class);
+
+        // FilmService с обновленными зависимостями
+        $this->app->bind(FilmService::class, function ($app) {
+            return new FilmService(
+                $app->make(FilmRepository::class),
+                $app->make(ExternalFilmRepositoryInterface::class), // Используем интерфейс
+                $app->make(FavoriteRepository::class)
+            );
         });
 
     }

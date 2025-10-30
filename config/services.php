@@ -43,6 +43,19 @@ return [
         'comments' => [
             'url' => env('EXT_API_COMMENTS', 'http://academy.localhost/api/comments/')
         ],
-    ]
+        [
+            'api_key' => env('OMDB_API_KEY'),
+            'base_url' => env('OMDB_BASE_URL', 'http://www.omdbapi.com/'),
+        ],
+    ],
+
+    'external_film_sources' => [
+        'default' => 'omdb',
+        'sources' => [
+            'omdb' => \App\Services\External\OmdbFilmRepository::class,
+            // В будущем можно добавить другие источники:
+            // 'tmdb' => \App\Services\External\TmdbFilmRepository::class,
+        ],
+    ],
 
 ];

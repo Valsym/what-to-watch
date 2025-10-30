@@ -70,6 +70,11 @@ class FilmRepository
             $film = $this->film->create([
                 'imdb_id' => $data->imdbId,
                 'status' => Film::STATUS_PENDING,
+                'promo' => false,
+                'rating' => null, // Явно устанавливаем null
+//                'scores_count' => null,
+                'run_time' => null,
+                'released' => null,
             ]);
 
             return $film;
@@ -109,7 +114,8 @@ class FilmRepository
         });
     }
 
-    public function updateFilmFromOmdb(int $filmId, array $omdbData): Film
+    public function updateFilmFromExternal(int $filmId, array $omdbData): Film
+//    public function updateFilmFromOmdb(int $filmId, array $omdbData): Film
     {
         return DB::transaction(function () use ($filmId, $omdbData) {
             $film = $this->film->findOrFail($filmId);

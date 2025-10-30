@@ -7,8 +7,8 @@ use Illuminate\Contracts\Support\Arrayable;
 class FilmDto implements Arrayable
 {
     public function __construct(
-        public int     $id,
-        public string  $name,
+        public int $id,
+        public ?string $name, // Делаем nullable
         public ?string $poster_image,
         public ?string $preview_image,
         public ?string $background_image,
@@ -16,15 +16,15 @@ class FilmDto implements Arrayable
         public ?string $video_link,
         public ?string $preview_video_link,
         public ?string $description,
-        public float   $rating,
-//        public int     $scores_count,
+        public ?float $rating, // Делаем nullable
+//        public ?int $scores_count, // Делаем nullable
         public ?string $director,
-        public array   $starring,
-        public int     $run_time,
-        public array   $genre,
-        public int     $released,
-        public bool    $is_favorite,
-        public bool    $promo,
+        public array $starring,
+        public ?int $run_time, // Делаем nullable
+        public array $genre,
+        public ?int $released, // Делаем nullable
+        public bool $is_favorite,
+        public bool $promo,
     )
     {
     }

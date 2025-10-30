@@ -3,12 +3,12 @@
 
 namespace App\Services\Films;
 
-//use App\Repositories\FilmRepository;
 use App\DTO\CreateFilmData;
 use App\DTO\FilmListQueryParams;
 use App\DTO\Films\FilmDto;
 use App\DTO\Films\SimilarFilmDto;
 use App\DTO\UpdateFilmData;
+use App\Jobs\FetchFilmDataFromExternalJob;
 use App\Jobs\FetchFilmDataFromOmdbJob;
 use App\Models\Film;
 use App\Repositories\Films\FilmRepository;
@@ -18,11 +18,16 @@ use App\Http\Resources\FilmResource;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use app\Repositories\Favorites\FavoriteRepository;
 
+use App\Contracts\ExternalFilmRepositoryInterface;
+use Illuminate\Support\Facades\Log;
+
 class FilmService
 {
     public function __construct(
         private FilmRepository $filmRepository,
-        private OmdbService $omdbService,
+//        private OmdbService $omdbService,
+        // Используем интерфейс:
+        private ExternalFilmRepositoryInterface $externalFilmRepository,
         private FavoriteRepository $favoriteRepository
     ) {}
 
@@ -64,12 +69,36 @@ class FilmService
 
         $film = $this->filmRepository->createFilm($data);
 
-        // Запускаем фоновую задачу для получения данных из OMDB
-        FetchFilmDataFromOmdbJob::dispatch($film->id);
+        // Запускаем фоновую задачу для получения данных из внешнего источника
+        FetchFilmDataFromExternalJob::dispatch($film->id);
 
-        return [
-            'data' => new \App\Http\Resources\FilmResource($film)
-        ];
+        return $this->mapFilmToDto($film, false)->toArray();
+
+        // Запускаем фоновую задачу для получения данных из OMDB
+//        FetchFilmDataFromOmdbJob::dispatch($film->id);
+
+//        return [
+//            'data' => new \App\Http\Resources\FilmResource($film)
+//        ];
+    }
+
+    public function fetchAndUpdateFromExternal(int $filmId): void
+    {
+        $film = $this->filmRepository->findByIdOrFail($filmId);
+
+        // Проверяем доступность внешнего сервиса
+        if (!$this->externalFilmRepository->isAvailable()) {
+            Log::warning('External film service is unavailable', ['film_id' => $filmId]);
+            return;
+        }
+
+        $externalData = $this->externalFilmRepository->getFilmData($film->imdb_id);
+
+        if ($externalData) {
+            $this->filmRepository->updateFilmFromExternal($filmId, $externalData);
+        } else {
+            Log::error('Failed to fetch data from external service for film', ['film_id' => $filmId]);
+        }
     }
 
     public function updateFilm(int $filmId, UpdateFilmData $data): array
@@ -220,7 +249,7 @@ class FilmService
     {
         return new FilmDto(
             id: $film->id,
-            name: $film->name,
+            name: $film->name, // Может быть null
             poster_image: $film->poster_image,
             preview_image: $film->preview_image,
             background_image: $film->background_image,
@@ -228,13 +257,13 @@ class FilmService
             video_link: $film->video_link,
             preview_video_link: $film->preview_video_link,
             description: $film->description,
-            rating: $film->rating,
-//            scores_count: $film->scores_count,
+            rating: $film->rating, // Может быть null
+//            scores_count: $film->scores_count, // Может быть null
             director: $film->director,
             starring: $film->starring ?? [],
-            run_time: $film->run_time,
+            run_time: $film->run_time, // Может быть null
             genre: $film->genres->pluck('name')->toArray(),
-            released: $film->released,
+            released: $film->released, // Может быть null
             is_favorite: $isFavorite, // Используем переданное значение
             promo: $film->promo,
         );
