@@ -9,6 +9,7 @@ use App\Http\Requests\Films\FilmsListRequest;
 use App\Http\Requests\Films\SetPromoRequest;
 use App\Http\Requests\Films\StoreFilmRequest;
 use App\Http\Requests\Films\UpdateFilmRequest;
+use App\Http\Resources\FilmListCollection;
 use App\Http\Resources\FilmListResource;
 use App\Http\Resources\FilmResource;
 use App\Http\Responses\Success;
@@ -52,9 +53,15 @@ class FilmController extends Controller
     public function index(FilmsListRequest $request)
     {
         $queryParams = FilmListQueryParams::fromRequest($request);
-        $result = $this->filmService->getFilmsList($queryParams);
+        $paginator = $this->filmService->getFilmsList($queryParams);
 
-        return $this->success($result);
+        return $this->success(new FilmListCollection($paginator));
+//
+//        $queryParams = FilmListQueryParams::fromRequest($request);
+//        $result = $this->filmService->getFilmsList($queryParams);
+
+//        return $this->success($result);
+//        return $this->success(FilmListResource::collection($result));
     }
 
     /**

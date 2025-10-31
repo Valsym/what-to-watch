@@ -61,10 +61,12 @@ class AuthTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->getJson('/api/user');
+//        $response->dump();
 
         $response->assertOk()
             ->assertJsonStructure([
-                'data' => ['user' => ['name', 'email', 'avatar', 'role']]
+                'data' => ['name', 'email', 'avatar', 'role']
+//                'data' => ['user' => ['name', 'email', 'avatar', 'role']]
             ]);
     }
 
@@ -80,7 +82,8 @@ class AuthTest extends TestCase
 
         $response->assertOk()
             ->assertJsonStructure([
-                'data' => ['user' => ['name', 'email', 'avatar', 'role']]
+                'data' => ['name', 'email', 'avatar', 'role']
+//                'data' => ['user' => ['name', 'email', 'avatar', 'role']]
             ]);
 
         $this->assertDatabaseHas('users', [

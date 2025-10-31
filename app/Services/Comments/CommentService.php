@@ -6,8 +6,10 @@ use App\DTO\Comments\CommentDto;
 use App\DTO\Comments\StoreCommentDto;
 use App\DTO\Comments\UpdateCommentDto;
 use App\Models\Comment;
+use App\Models\User;
 use App\Repositories\Comments\CommentRepository;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class CommentService
@@ -16,16 +18,17 @@ class CommentService
         private CommentRepository $commentRepository
     ) {}
 
-    public function getFilmComments(int $filmId): array
+    public function getFilmComments(int $filmId): Collection//array
     {
         $comments = $this->commentRepository->getFilmComments($filmId);
 
-        return $comments->map(function ($comment) {
-            return $this->mapToDto($comment);
-        })->toArray();
+        return $comments;
+//            ->map(function ($comment) {
+//            return $this->mapToDto($comment);
+//        })->toArray();
     }
 
-    public function createComment(StoreCommentDto $dto): CommentDto
+    public function createComment(StoreCommentDto $dto): Comment//CommentDto
     {
         $comment = $this->commentRepository->createComment([
             'text' => $dto->text,
@@ -37,10 +40,11 @@ class CommentService
 
         $comment->load('user');
 
-        return $this->mapToDto($comment);
+        return $comment;
+//        return $this->mapToDto($comment);
     }
 
-    public function updateComment(int $commentId, UpdateCommentDto $dto, int $userId, bool $isModerator = false): CommentDto
+    public function updateComment(int $commentId, UpdateCommentDto $dto, int $userId, bool $isModerator = false): Comment//CommentDto
     {
         // Проверяем права доступа
         if (!$isModerator && !$this->commentRepository->userCanEditComment($userId, $commentId)) {
@@ -53,7 +57,9 @@ class CommentService
         }
 
         $comment = $this->commentRepository->updateComment($commentId, $data);
-        return $this->mapToDto($comment);
+
+        return $comment;
+//        return $this->mapToDto($comment);
     }
 
     public function deleteComment(int $commentId, int $userId, bool $isModerator = false): void

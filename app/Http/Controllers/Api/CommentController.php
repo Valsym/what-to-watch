@@ -6,6 +6,7 @@ use App\Http\Requests\Comments\StoreCommentRequest;
 use App\Http\Requests\Comments\UpdateCommentRequest;
 use App\DTO\Comments\StoreCommentDto;
 use App\DTO\Comments\UpdateCommentDto;
+use App\Http\Resources\CommentResource;
 use App\Http\Responses\Success;
 use App\Services\Comments\CommentService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -23,7 +24,8 @@ class CommentController extends Controller
     {
         $comments = $this->commentService->getFilmComments($filmId);
 
-        return $this->success($comments);
+//        return $this->success($comments);
+        return $this->success(CommentResource::collection($comments));
     }
 
     /**
@@ -46,7 +48,8 @@ class CommentController extends Controller
 
         $comment = $this->commentService->createComment($storeCommentDto);
 
-        return $this->success($comment->toArray(), 201);
+//        return $this->success($comment->toArray(), 201);
+        return $this->success(new CommentResource($comment), 201);
     }
 
 
@@ -73,7 +76,8 @@ class CommentController extends Controller
                 $user->isModerator()
             );
 
-            return $this->success($comment->toArray());
+//            return $this->success($comment->toArray());
+            return $this->success(new CommentResource($comment), 200);
         } catch (AuthorizationException $e) {
             abort(403, $e->getMessage());
         }

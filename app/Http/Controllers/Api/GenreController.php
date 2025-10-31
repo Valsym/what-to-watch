@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Genre\UpdateGenreRequest;
+use App\Http\Resources\GenreResource;
 use App\Http\Responses\Success;
 use App\Services\Genres\GenreService;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +20,9 @@ class GenreController extends Controller
     {
         $genres = $this->genreService->getAllGenres();
 
-        return $this->success($genres);
+//        return $this->success($genres);
+        return $this->success(GenreResource::collection($genres));
+
     }
 
     /**
@@ -29,7 +32,8 @@ class GenreController extends Controller
     {
         $genre = $this->genreService->updateGenre($id, $request->input('name'));
 
-        return $this->success($genre);
+//        return $this->success($genre);
+        return $this->success(new GenreResource($genre));
     }
 
     /**

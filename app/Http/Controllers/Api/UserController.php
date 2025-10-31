@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Resources\UserResource;
 use App\Http\Responses\Success;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +17,8 @@ class UserController extends Controller
     {
         $user = $this->authService->getCurrentUser(auth()->id());
 
-        return $this->success(['user' => $user]);
+//        return $this->success(['user' => $user]);
+        return $this->success(new UserResource($user));
     }
 
     public function update(RegisterRequest $request): Success
@@ -26,6 +28,7 @@ class UserController extends Controller
 
         $user = $this->authService->updateUser(auth()->id(), $data, $avatar);
 
-        return $this->success(['user' => $user]);
+//        return $this->success(['user' => $user]);
+        return $this->success(new UserResource($user));//->fresh()));
     }
 }

@@ -43,8 +43,8 @@ final class FilmListResource extends JsonResource
             'preview_video_link' => $this->preview_video_link,
 //            'genre' => $this->genres !== null ? $this->genres->pluck('name')->first() : null,
             'released' => (int)$this->released,
-//            'genre' => $this->genres->pluck('name')->first(),
-            'genre' => $this->genres->isNotEmpty() ? $this->genres->first()->name : null,
+            'genre' => $this->genres->pluck('name')->first(),
+//            'genre' => $this->genres->isNotEmpty() ? $this->genres->first()->name : null,
             // Добавляем rating для главной страницы если нужно
 //            'rating' => $this->when($request->has('order_by') && $request->get('order_by') === 'rating',
 //                function () {

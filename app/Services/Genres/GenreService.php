@@ -3,7 +3,9 @@
 namespace App\Services\Genres;
 
 use App\DTO\Genres\GenreDto;
+use App\Models\Genre;
 use App\Repositories\Genres\GenreRepository;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class GenreService
@@ -12,7 +14,7 @@ class GenreService
         private GenreRepository $genreRepository
     ) {}
 
-    public function getAllGenres(): array
+    public function getAllGenres(): Collection//array
     {
         $genres = $this->genreRepository->getAllGenres();
 
@@ -20,25 +22,26 @@ class GenreService
 //            return $this->mapToDto($genre);
 //        })->toArray();
 
-        return $genres->map(function ($genre) {
-            return $this->mapToDto($genre)->toArray(); // возвращаем массив
-        })->toArray();
+        return $genres;
+//            ->map(function ($genre) {
+//            return $this->mapToDto($genre)->toArray(); // возвращаем массив
+//        })->toArray();
     }
 
-    public function updateGenre(int $id, string $name): array
+    public function updateGenre(int $id, string $name): Genre//array
     {
         $genre = $this->genreRepository->updateGenre($id, ['name' => $name]);
 
-        return $this->mapToDto($genre)->toArray(); // возвращаем массив
-//        return $this->mapToDto($genre);
+//        return $this->mapToDto($genre)->toArray(); // возвращаем массив
+        return $genre;
     }
 
-    public function getGenreById(int $id): array
+    public function getGenreById(int $id): Genre//array
     {
         $genre = $this->genreRepository->findGenreOrFail($id);
 
-        return $this->mapToDto($genre)->toArray(); // возвращаем массив
-//        return $this->mapToDto($genre);
+//        return $this->mapToDto($genre)->toArray(); // возвращаем массив
+        return $genre;
     }
 
     private function mapToDto($genre): GenreDto

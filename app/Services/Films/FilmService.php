@@ -31,8 +31,10 @@ class FilmService
         private FavoriteRepository $favoriteRepository
     ) {}
 
-    public function getFilmsList(FilmListQueryParams $params): array
+    public function getFilmsList(FilmListQueryParams $params): LengthAwarePaginator//array
     {
+        return $this->filmRepository->getFilmsList($params);
+
         $filmsPaginator = $this->filmRepository->getFilmsList($params);
 
         return [

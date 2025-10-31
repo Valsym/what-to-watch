@@ -71,18 +71,18 @@ class AuthService
         }
     }
 
-    public function getCurrentUser(int $userId): array//UserDto
+    public function getCurrentUser(int $userId): User//array//UserDto
     {
         $user = $this->userRepository->findUserById($userId);
         if (!$user) {
             throw new ModelNotFoundException('User not found');
         }
 
-        return $this->mapUserToDto($user)->toArray(); // возвращаем массив
-//        return $this->mapUserToDto($user);
+//        return $this->mapUserToDto($user)->toArray(); // возвращаем массив
+        return $user;
     }
 
-    public function updateUser(int $userId, array $data, ?\Illuminate\Http\UploadedFile $avatar = null): array//UserDto
+    public function updateUser(int $userId, array $data, ?\Illuminate\Http\UploadedFile $avatar = null): User//array//UserDto
     {
         if (isset($data['email'])) {
             $existingUser = $this->userRepository->findUserByEmail($data['email']);
@@ -98,8 +98,9 @@ class AuthService
         $this->userRepository->updateUser($userId, $data);
         $user = $this->userRepository->findUserById($userId);
 
-        return $this->mapUserToDto($user)->toArray(); // возвращаем массив
+//        return $this->mapUserToDto($user)->toArray(); // возвращаем массив
 //        return $this->mapUserToDto($user);
+        return $user->fresh(); // Возвращаем обновленную модель
     }
 
     private function mapUserToDto(User $user): UserDto
