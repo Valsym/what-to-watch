@@ -12,8 +12,8 @@ use App\Repositories\Favorites\FavoriteRepository;
 use App\Repositories\Films\FilmRepository;
 use App\Services\Films\FilmService;
 use App\Services\Films\OmdbService;
-use App\Support\Import\FilmsRepository;
-use App\Support\Import\TvmazeRepository;
+//use App\Support\Import\FilmsRepository;
+//use App\Support\Import\TvmazeRepository;
 use Illuminate\Support\Facades\Gate;
 //use Illuminate\Support\ServiceProvider;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -107,7 +107,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Внешние источники данных о фильмах
-        $this->app->bind(ExternalFilmRepositoryInterface::class, OmdbFilmRepository::class);
+        $this->app->bind(ExternalFilmRepositoryInterface::class,
+            OmdbFilmRepository::class);
 
         // FilmService с обновленными зависимостями
         $this->app->bind(FilmService::class, function ($app) {
@@ -161,20 +162,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('film-update', function (User $user) {
             return (int)$user->role === User::ROLE_MODERATOR;
         });
-
-//        Queue::failing(function (JobFailed $event) {
-//             $event->connectionName;
-//             $event->job;
-//             $event->exception;
-//        });
-
-//        Event::listen(function (QueueBusy $event) {
-//            Notification::route('mail', 'dev@example.com')
-//                ->notify(new QueueHasLongWaitTime(
-//                    $event->connection,
-//                    $event->queue,
-//                    $event->size
-//                ));
-//        });
+        
     }
 }
