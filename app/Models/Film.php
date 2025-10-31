@@ -68,7 +68,7 @@ class Film extends Model
 
     protected $appends = [
         'rating',
-        'is_favorite',
+        'is_favorite', // Добавляем accessor для is_favorite
     ];
 
     protected $casts = [
@@ -97,42 +97,6 @@ class Film extends Model
 
     ];
 
-    /*public const LIST_FIELDS = ['films.id', 'name', 'preview_image', 'preview_video_link'];
-
-    protected $with = ['genres'];
-
-    protected $appends = [
-        'rating',
-        'is_favorite',
-    ];
-
-    protected $hidden = [
-        'created_at',
-        'updated_at',
-        'pivot',
-    ];
-
-    protected $casts = [
-        'starring' => 'array',
-        'promo' => 'bool',
-    ];
-
-    protected $fillable = [
-        'name',
-        'poster_image',
-        'preview_image',
-        'background_image',
-        'background_color',
-        'video_link',
-        'preview_video_link',
-        'description',
-        'director',
-        'starring',
-        'run_time',
-        'released',
-        'promo',
-    ];*/
-
     public function genres(): BelongsToMany
     {
 //        return $this->belongsToMany(Genre::class);
@@ -154,12 +118,7 @@ class Film extends Model
         return round($this->scores()->avg('rating'), 1);
     }
 
-    public function getIsFavoriteAttribute()
-    {
-        return Auth::check() && Auth::user()->hasFilm($this);
-    }
-
-    /**
+       /**
      * Добавление сортировки.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
@@ -177,6 +136,21 @@ class Film extends Model
     public function scopePromo($query)
     {
         $query->where('promo', true);
+    }
+
+    public function favoritedBy()
+    {
+        return $this->belongsToMany(User::class, 'favorite_films')
+            ->withTimestamps();
+    }
+
+    public function getIsFavoriteAttribute()
+    {
+        if (!auth()->check()) {
+            return false;
+        }
+
+        return $this->favoritedBy()->where('user_id', auth()->id())->exists();
     }
 
 }

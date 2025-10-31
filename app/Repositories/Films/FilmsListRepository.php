@@ -21,7 +21,7 @@ final class FilmsListRepository
     public function getFilms(array $filters = [], int $perPage = 8): LengthAwarePaginator
     {
         $film =  Film::query()
-//            ->with(['genres', 'actors', 'directors'])
+            ->with(['genres', 'actors', 'directors'])
             ->when(
                 isset($filters['genre']),
                 fn ($query) => $query->whereHas(

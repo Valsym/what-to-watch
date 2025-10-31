@@ -1,51 +1,273 @@
 <?php
+// app/Services/FilmService.php
 
 namespace App\Services\Films;
 
+use App\DTO\CreateFilmData;
+use App\DTO\FilmListQueryParams;
+use App\DTO\Films\FilmDto;
+use App\DTO\Films\SimilarFilmDto;
+use App\DTO\UpdateFilmData;
+use App\Jobs\FetchFilmDataFromExternalJob;
+use App\Jobs\FetchFilmDataFromOmdbJob;
 use App\Models\Film;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
+use App\Repositories\Films\FilmRepository;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Http\Resources\FilmListResource;
+use App\Http\Resources\FilmResource;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use app\Repositories\Favorites\FavoriteRepository;
+
+use App\Contracts\ExternalFilmRepositoryInterface;
+use Illuminate\Support\Facades\Log;
 
 class FilmService
 {
-    /**
-     * Получение похожих фильмов
-     *
-     * @param Film $film
-     * @param array $fields
-     * @return mixed
-     */
-    public function getSimilarFor(Film $film, array $fields = ['*'])
+    public function __construct(
+        private FilmRepository $filmRepository,
+//        private OmdbService $omdbService,
+        // Используем интерфейс:
+        private ExternalFilmRepositoryInterface $externalFilmRepository,
+        private FavoriteRepository $favoriteRepository
+    ) {}
+
+    public function getFilmsList(FilmListQueryParams $params): LengthAwarePaginator//array
     {
-        return Film::select($fields)
-            ->whereHas('genres', function ($query) use ($film) {
-                $query->whereIn('genres.id', $film->genres()->pluck('genres.id'));
-            })
-            ->where('id', '!=', $film->id)
-            ->take(config('app.api.films.similar.limit', 4))
-            ->get();
+        return $this->filmRepository->getFilmsList($params);
+
+        $filmsPaginator = $this->filmRepository->getFilmsList($params);
+
+        return [
+            'data' => FilmListResource::collection($filmsPaginator->items()),
+            'current_page' => $filmsPaginator->currentPage(),
+            'first_page_url' => $filmsPaginator->url(1),
+            'next_page_url' => $filmsPaginator->nextPageUrl(),
+            'prev_page_url' => $filmsPaginator->previousPageUrl(),
+            'per_page' => $filmsPaginator->perPage(),
+            'total' => $filmsPaginator->total(),
+        ];
     }
 
-    public function getPromo()
+    // Дополнительные сервисные методы
+    public function getFilmDetails(int $filmId): ?array
     {
-        return Film::promo()->latest('updated_at')->first();
+        $film = $this->filmRepository->findById($filmId);
+
+        if (!$film) {
+            return null;
+        }
+
+        return [
+            'data' => new FilmResource($film)
+        ];
     }
 
-    /*
-     * Сохранение файла указанного типа
-     */
-    public function saveFile(string $url, string $type, string $name): string
+    public function createFilm(CreateFilmData $data): array
     {
-        // Рекомендации:
-        // Хранить файл с hash суффиксом, или иначе контролировать кеширование (при использовании hash в имени - нужно удалять старые версии)
-        // Ограничивать к-во файлов в одной папке
+        // Проверяем уникальность imdb_id
+        if ($this->filmRepository->filmExistsByImdbId($data->imdbId)) {
+            throw new \InvalidArgumentException('Фильм с таким IMDB ID уже существует');
+        }
 
-        $file = Http::get($url)->body();
-        $ext = pathinfo($url, PATHINFO_EXTENSION);
-        $path = $type . DIRECTORY_SEPARATOR . $name . ".$ext";
+        $film = $this->filmRepository->createFilm($data);
 
-        Storage::disk('public')->put($path, $file);
+        // Запускаем фоновую задачу для получения данных из внешнего источника
+        FetchFilmDataFromExternalJob::dispatch($film->id);
 
-        return Storage::disk('public')->url($path);
+        return $this->mapFilmToDto($film, false)->toArray();
+
+        // Запускаем фоновую задачу для получения данных из OMDB
+//        FetchFilmDataFromOmdbJob::dispatch($film->id);
+
+//        return [
+//            'data' => new \App\Http\Resources\FilmResource($film)
+//        ];
+    }
+
+    public function fetchAndUpdateFromExternal(int $filmId): void
+    {
+        $film = $this->filmRepository->findByIdOrFail($filmId);
+
+        // Проверяем доступность внешнего сервиса
+        if (!$this->externalFilmRepository->isAvailable()) {
+            Log::warning('External film service is unavailable', ['film_id' => $filmId]);
+            return;
+        }
+
+        $externalData = $this->externalFilmRepository->getFilmData($film->imdb_id);
+
+        if ($externalData) {
+            $this->filmRepository->updateFilmFromExternal($filmId, $externalData);
+        } else {
+            Log::error('Failed to fetch data from external service for film', ['film_id' => $filmId]);
+        }
+    }
+
+    public function updateFilm(int $filmId, UpdateFilmData $data): array
+    {
+        try {
+            // Проверяем уникальность imdb_id (исключая текущий фильм)
+            if ($data->imdbId && $this->filmRepository->filmExistsByImdbId($data->imdbId, $filmId)) {
+                throw new \InvalidArgumentException('Фильм с таким IMDB ID уже существует');
+            }
+
+            $film = $this->filmRepository->updateFilm($filmId, $data);
+
+            return [
+                'data' => new \App\Http\Resources\FilmResource($film)
+            ];
+        } catch (ModelNotFoundException $e) {
+            throw new \InvalidArgumentException('Фильм не найден', 404);
+        }
+    }
+
+    public function fetchAndUpdateFromOmdb(int $filmId): void
+    {
+        $film = $this->filmRepository->findByIdOrFail($filmId);
+
+        $omdbData = $this->omdbService->getFilmData($film->imdb_id);
+
+        if ($omdbData) {
+            $this->filmRepository->updateFilmFromOmdb($filmId, $omdbData);
+        } else {
+            // Логируем ошибку, но не прерываем выполнение
+            \Log::error('Failed to fetch data from OMDB for film', ['film_id' => $filmId]);
+        }
+    }
+
+    public function getSimilarFilms(int $filmId): array
+    {
+        $films = $this->filmRepository->getSimilarFilms($filmId);
+
+        return $films->map(function ($film) {
+            return new SimilarFilmDto(
+                id: $film->id,
+                name: $film->name,
+                poster_image: $film->poster_image,
+                preview_image: $film->preview_image,
+                background_image: $film->background_image,
+                background_color: $film->background_color,
+                video_link: $film->video_link,
+                preview_video_link: $film->preview_video_link,
+                description: $film->description,
+                rating: $film->rating,
+//                scores_count: $film->scores_count,
+                director: $film->director,
+                starring: $film->starring ?? [],
+                run_time: $film->run_time,
+                genre: $film->genres->pluck('name')->toArray(),
+                released: $film->released,
+                is_favorite: $film->is_favorite ?? false,
+            );
+        })->toArray();
+    }
+
+    public function getUserFavorites(int $userId): array
+    {
+        $films = $this->favoriteRepository->getUserFavorites($userId);
+
+        return $films->map(function ($film) use ($userId) {
+            return new FilmDto(
+                id: $film->id,
+                name: $film->name,
+                poster_image: $film->poster_image,
+                preview_image: $film->preview_image,
+                background_image: $film->background_image,
+                background_color: $film->background_color,
+                video_link: $film->video_link,
+                preview_video_link: $film->preview_video_link,
+                description: $film->description,
+                rating: $film->rating,
+//                scores_count: $film->scores_count,
+                director: $film->director,
+                starring: $film->starring ?? [],
+                run_time: $film->run_time,
+                genre: $film->genres->pluck('name')->toArray(),
+                released: $film->released,
+                is_favorite: true, // Всегда true для избранных
+                promo: $this->promo ?? 0,
+            );
+        })->toArray();
+    }
+
+    public function addToFavorites(int $userId, int $filmId): void
+    {
+        // Проверяем существование фильма
+        if (!$this->filmRepository->filmExists($filmId)) {
+            throw new ModelNotFoundException('Film not found');
+        }
+
+        $this->favoriteRepository->addToFavorites($userId, $filmId);
+    }
+
+    public function removeFromFavorites(int $userId, int $filmId): void
+    {
+        // Проверяем существование фильма
+        if (!$this->filmRepository->filmExists($filmId)) {
+            throw new ModelNotFoundException('Film not found');
+        }
+
+        $this->favoriteRepository->removeFromFavorites($userId, $filmId);
+    }
+
+    public function getFilm(int $id, ?int $userId = null): array
+    {
+        $film = $this->filmRepository->findByIdOrFail($id);//findOrFail($id);
+
+        // Вычисляем is_favorite для конкретного пользователя
+        $isFavorite = false;
+        if ($userId) {
+            $isFavorite = $this->favoriteRepository->isFilmInFavorites($userId, $id);
+        }
+
+        return $this->mapFilmToDto($film, $isFavorite)->toArray();
+    }
+
+    public function getPromoFilm(): ?array
+    {
+        $film = $this->filmRepository->getPromoFilm();
+
+        if (!$film) {
+//            throw new ModelNotFoundException('Запрашиваемая страница не существует');
+            return null;
+        }
+
+        return $this->mapFilmToDto($film)->toArray();
+    }
+
+    public function setPromoFilm(int $filmId): array
+    {
+        // Проверяем существование фильма
+        if (!$this->filmRepository->filmExists($filmId)) {
+            throw new ModelNotFoundException('Film not found');
+        }
+
+        $film = $this->filmRepository->setPromoFilm($filmId);
+        return $this->mapFilmToDto($film)->toArray();
+    }
+
+    // Обновляем метод mapFilmToDto для приема is_favorite
+    private function mapFilmToDto(Film $film, bool $isFavorite = false): FilmDto
+    {
+        return new FilmDto(
+            id: $film->id,
+            name: $film->name, // Может быть null
+            poster_image: $film->poster_image,
+            preview_image: $film->preview_image,
+            background_image: $film->background_image,
+            background_color: $film->background_color,
+            video_link: $film->video_link,
+            preview_video_link: $film->preview_video_link,
+            description: $film->description,
+            rating: $film->rating, // Может быть null
+//            scores_count: $film->scores_count, // Может быть null
+            director: $film->director,
+            starring: $film->starring ?? [],
+            run_time: $film->run_time, // Может быть null
+            genre: $film->genres->pluck('name')->toArray(),
+            released: $film->released, // Может быть null
+            is_favorite: $isFavorite, // Используем переданное значение
+            promo: $film->promo,
+        );
     }
 }

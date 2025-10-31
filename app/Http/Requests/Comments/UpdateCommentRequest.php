@@ -9,10 +9,10 @@ class UpdateCommentRequest extends FormRequest
     /**
      * Determine if the user is authorized to make this request.
      */
-//    public function authorize(): bool
-//    {
-//        return false;
-//    }
+    public function authorize(): bool
+    {
+        return auth()->check();
+    }
 
     /**
      * Get the validation rules that apply to the request.
@@ -22,9 +22,8 @@ class UpdateCommentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'text' => 'sometimes|string|min:10|max:400',
-            'rate' => 'integer|min:1|max:10',
-            'comment_id' => 'nullable|exists:comments,id'
+            'text' => 'required|string|min:50|max:400',
+            'rating' => 'sometimes|integer|min:1|max:10',
         ];
     }
 
@@ -36,11 +35,11 @@ class UpdateCommentRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'text.required' => 'Текст комментария обязателен',
             'text.min' => 'Комментарий должен содержать не менее 50 символов',
             'text.max' => 'Комментарий должен содержать не более 400 символов',
             'rate.min' => 'Оценка должна быть не менее 1',
             'rate.max' => 'Оценка должна быть не более 10',
-            'comment_id.exists' => 'Родительский комментарий не найден',
         ];
     }
 }

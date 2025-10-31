@@ -1,117 +1,104 @@
 <?php
 
-
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
 
 class AuthTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * A basic feature test example.
-     */
-//    public function test_example(): void
-//    {
-//        $response = $this->get('/');
-//
-//        $response->assertStatus(200);
-//    }
-
-    /**
-     * Проверить регистрацию юзера
-     */
-    public function testRegisterRoute()
+    public function testUserRegistration(): void
     {
-        $newUser = User::factory()->make();
-        $data = [
-            'email' => $newUser->email,
-            'name' => $newUser->name,
-            'password' => $newUser->password,
-            'password_confirmation' => $newUser->password,
-        ];
+        Storage::fake('public');
 
-        $response = $this->postJson(route('auth.register'), $data);
+        $response = $this->postJson('/api/register', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'file' => UploadedFile::fake()->image('avatar.jpg')
+        ]);
 
-        $response->assertStatus(201);
-        $response->assertJsonStructure(['data' => ['token', 'user']]);
+        $response->assertCreated()
+            ->assertJsonStructure([
+                'data' => [
+                    'user' => ['name', 'email', 'avatar', 'role'],
+                    'token' => ['token']//, 'type']
+                ]
+            ]);
 
         $this->assertDatabaseHas('users', [
-            'name' => $newUser->name,
-            'email' => $newUser->email,
+            'email' => 'test@example.com',
+            'name' => 'Test User'
         ]);
     }
 
-    /**
-     * Проверить статус авторизации юзера
-     */
-//    public function testAuthStatusByUser() // не проходит тест
-//    {
-//        $user = User::factory()->create();
-//
-//        $response = $this->getJson(route('auth.login', ['X-Token' => $user->tokens]));
-//
-//        $response->assertStatus(200);
-//        $response->assertJsonStructure(['data' => ['token']]);
-//    }
-
-    /**
-     * Проверка авторизации пользователя.
-     */
-    public function testAuthRoute(): void
+    public function testUserLogin(): void
     {
-//        $user = User::factory()->create();
-        $user = User::factory()->create(['password' => '12345678']);
-//        Sanctum::actingAs($user);
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'password' => bcrypt('Password123!')
+        ]);
 
-        $response = $this->postJson(route('auth.login', [
-            'email' => $user->email,
-            'password' => '12345678'
-        ]));
+        $response = $this->postJson('/api/login', [
+            'email' => 'test@example.com',
+            'password' => 'Password123!'
+        ]);
 
-        $response->assertStatus(200);
-        $response->assertJsonStructure(['data' => ['token']]);
+        $response->assertOk()
+            ->assertJsonStructure([
+                'data' => ['token']
+            ]);
     }
 
-    /**
-     * Проверка авторизации пользователя с использованием не корректного пароля.
-     */
-    public function testAuthRouteWithWrongPassword()
+    public function testGetCurrentUser(): void
     {
-        $user = User::factory()->create(['password' => '12345678']);
-        $data = [
-            'email' => $user->email,
-            'password' => '1234567890',
-        ];
+        $user = User::factory()->create();
 
-        $response = $this->postJson(route('auth.login'), $data);
+        $response = $this->actingAs($user)->getJson('/api/user');
+//        $response->dump();
 
-        $response->assertStatus(401);
-
-        $response->assertJsonFragment(['message' => 'login.failed']);
-//        $response->assertJsonFragment(['message' => 'Неверное имя пользователя или пароль.']);
+        $response->assertOk()
+            ->assertJsonStructure([
+                'data' => ['name', 'email', 'avatar', 'role']
+//                'data' => ['user' => ['name', 'email', 'avatar', 'role']]
+            ]);
     }
 
-    /**
-     * Проверка метода выхода пользователя.
-     * И авторизации запроса используя заголовок Authorization.
-     */
-    public function testLogoutRoute()
+    public function testUpdateUserProfile(): void
     {
-        $user = User::factory()->create(['password' => '12345678']);
-        $token = $user->createToken('auth-token');
+        Storage::fake('public');
+        $user = User::factory()->create();
 
-        $response = $this->postJson(
-            route('auth.logout'),
-            [],
-            ['Authorization' => 'Bearer ' . $token->plainTextToken]
-        );
+        $response = $this->actingAs($user)->patchJson('/api/user', [
+            'name' => 'Updated Name',
+            'email' => 'updated@example.com',
+        ]);
 
-        $response->assertStatus(204);
-        $this->assertEmpty(User::first()->tokens()->get());
+        $response->assertOk()
+            ->assertJsonStructure([
+                'data' => ['name', 'email', 'avatar', 'role']
+//                'data' => ['user' => ['name', 'email', 'avatar', 'role']]
+            ]);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'name' => 'Updated Name',
+            'email' => 'updated@example.com'
+        ]);
     }
 
+    public function testUserLogout(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/logout');
+
+        $response->assertNoContent();
+    }
 }

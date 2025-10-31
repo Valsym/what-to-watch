@@ -55,25 +55,6 @@ class Comment extends Model
         'film_id'
     ];
 
-    /*protected $visible = [
-        'id',
-//        'text',
-        'rating',
-        'parent_id',
-        'created_at',
-        'author',
-
-    ];
-
-    protected $fillable = [
-        'text',
-        'user_id',
-    ];
-
-    protected $appends = [
-        'author',
-    ];*/
-
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

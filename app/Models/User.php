@@ -112,6 +112,7 @@ class User extends Authenticatable
     public function favoriteFilms(): BelongsToMany
     {
         return $this->belongsToMany(Film::class, 'favorite_films')
-            ->withTimestamps();
+            ->withTimestamps()
+            ->orderBy('favorite_films.created_at', 'desc');
     }
 }

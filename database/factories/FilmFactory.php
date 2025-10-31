@@ -33,6 +33,12 @@ class FilmFactory extends Factory
             'preview_video_link' => $this->faker->url(),
             'status' => Film::STATUS_READY,
 //            'promo' => false,
+            'director' => $this->faker->name(),
+            'starring' => [
+                $this->faker->name(),
+                $this->faker->name(),
+                $this->faker->name(),
+            ],
         ];
     }
 }

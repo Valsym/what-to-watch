@@ -1,0 +1,18 @@
+{
+    "data": [
+        {
+            "imdb_id": "tt0111161",
+            "text": "This movie changed my perspective on life. Absolutely brilliant!",
+            "rating": 10,
+            "author": "cinema_lover",
+            "created_at": "2024-01-15T10:30:00Z"
+        },
+        {
+            "imdb_id": "tt0068646",
+            "text": "Masterpiece of cinematography. Brando was incredible.",
+            "rating": 9,
+            "author": "film_critic",
+            "created_at": "2024-01-15T14:20:00Z"
+        }
+    ]
+}

@@ -3,16 +3,33 @@
 namespace App\Providers;
 
 //use App\Interfaces\FilmsOmdbRepositoryInterface;
+use App\Models\Film;
 use App\Models\Comment;
+use App\Models\Genre;
 use App\Models\User;
 //use App\Repositories\Films\FilmsOmdbRepository;
-use App\Support\Import\FilmsRepository;
-use App\Support\Import\TvmazeRepository;
+use App\Repositories\Favorites\FavoriteRepository;
+use App\Repositories\Films\FilmRepository;
+use App\Services\Films\FilmService;
+use App\Services\Films\OmdbService;
+//use App\Support\Import\FilmsRepository;
+//use App\Support\Import\TvmazeRepository;
 use Illuminate\Support\Facades\Gate;
 //use Illuminate\Support\ServiceProvider;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Queue\Events\JobFailed;
+use App\Repositories\Auth\UserRepository;
+use App\Services\Auth\AuthService;
+use App\Repositories\Genres\GenreRepository;
+use App\Services\Genres\GenreService;
+use App\Repositories\Comments\CommentRepository;
+use App\Services\Comments\CommentService;
+use App\Contracts\ExternalFilmRepositoryInterface;
+use App\Services\External\OmdbFilmRepository;
+use App\Contracts\ExternalCommentRepositoryInterface;
+use App\Services\External\ExternalCommentRepository;
+use App\Services\Comments\ExternalCommentService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -38,6 +55,81 @@ class AppServiceProvider extends ServiceProvider
 //                return new GuzzleAdapter(new Client());
 //            }
 //        );
+
+        // Auth
+        $this->app->bind(UserRepository::class, function ($app) {
+            return new UserRepository(new \App\Models\User());
+        });
+
+        $this->app->bind(AuthService::class, function ($app) {
+            return new AuthService($app->make(UserRepository::class));
+        });
+
+        $this->app->bind(FilmRepository::class, function ($app) {
+            return new FilmRepository(
+                new Film(),
+                new Genre() // Добавляем второй обязательный аргумент
+            );
+        });
+
+        $this->app->bind(FilmService::class, function ($app) {
+            return new FilmService(
+                $app->make(FilmRepository::class),
+                $app->make(OmdbService::class), // Добавляем второй обязательный аргумент
+                $app->make(FavoriteRepository::class)
+            );
+        });
+
+        $this->app->bind(OmdbService::class, function ($app) {
+            return new OmdbService(/* необходимые зависимости */);
+        });
+
+        $this->app->bind(FavoriteRepository::class, function ($app) {
+            return new FavoriteRepository();
+        });
+
+        // Genres
+        $this->app->bind(GenreRepository::class, function ($app) {
+            return new GenreRepository(new \App\Models\Genre());
+        });
+
+        $this->app->bind(GenreService::class, function ($app) {
+            return new GenreService($app->make(GenreRepository::class));
+        });
+
+        // Comments
+        $this->app->bind(CommentRepository::class, function ($app) {
+            return new CommentRepository(new \App\Models\Comment());
+        });
+
+        $this->app->bind(CommentService::class, function ($app) {
+            return new CommentService($app->make(CommentRepository::class));
+        });
+
+        // Внешние источники данных о фильмах
+        $this->app->bind(ExternalFilmRepositoryInterface::class,
+            OmdbFilmRepository::class);
+
+        // FilmService с обновленными зависимостями
+        $this->app->bind(FilmService::class, function ($app) {
+            return new FilmService(
+                $app->make(FilmRepository::class),
+                $app->make(ExternalFilmRepositoryInterface::class), // Используем интерфейс
+                $app->make(FavoriteRepository::class)
+            );
+        });
+
+        // Внешние комментарии
+        $this->app->bind(ExternalCommentRepositoryInterface::class,
+            ExternalCommentRepository::class);
+
+        $this->app->bind(ExternalCommentService::class, function ($app) {
+            return new ExternalCommentService(
+                $app->make(ExternalCommentRepositoryInterface::class),
+                $app->make(CommentRepository::class)
+            );
+        });
+
     }
 
     /**
@@ -71,19 +163,5 @@ class AppServiceProvider extends ServiceProvider
             return (int)$user->role === User::ROLE_MODERATOR;
         });
 
-//        Queue::failing(function (JobFailed $event) {
-//             $event->connectionName;
-//             $event->job;
-//             $event->exception;
-//        });
-
-//        Event::listen(function (QueueBusy $event) {
-//            Notification::route('mail', 'dev@example.com')
-//                ->notify(new QueueHasLongWaitTime(
-//                    $event->connection,
-//                    $event->queue,
-//                    $event->size
-//                ));
-//        });
     }
 }

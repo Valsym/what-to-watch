@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Validator;
+//use App\Http\Controllers\Validator;
 use App\Http\Responses\ErrorResponse;
 use App\Http\Responses\Success;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
 
 class Controller extends BaseController
@@ -29,5 +30,10 @@ class Controller extends BaseController
         int $statusCode = Response::HTTP_BAD_REQUEST
     ): ErrorResponse {
         return new ErrorResponse($message, $errors, $statusCode);
+    }
+
+    protected function notFound(string $message = 'Запрашиваемая страница не существует'): ErrorResponse
+    {
+        return new ErrorResponse($message, [], Response::HTTP_NOT_FOUND);
     }
 }

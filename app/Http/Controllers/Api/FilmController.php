@@ -2,20 +2,30 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\DTO\CreateFilmData;
+use App\DTO\FilmListQueryParams;
+use App\DTO\UpdateFilmData;
 use App\Http\Requests\Films\FilmsListRequest;
+use App\Http\Requests\Films\SetPromoRequest;
 use App\Http\Requests\Films\StoreFilmRequest;
 use App\Http\Requests\Films\UpdateFilmRequest;
+use App\Http\Resources\FilmListCollection;
 use App\Http\Resources\FilmListResource;
 use App\Http\Resources\FilmResource;
 use App\Http\Responses\Success;
 use App\Models\Film;
+//use App\Repositories\FilmRepository;
 use App\Repositories\Films\FilmRepository;
 use App\Services\Films\FilmCreateService;
 use App\Services\Films\FilmListService;
 use App\Services\Films\FilmService;
 use App\Services\Films\FilmUpdateService;
+//use App\Services\FilmService;
 use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,10 +34,11 @@ use Throwable;
 class FilmController extends Controller
 {
     public function __construct(
-        protected FilmListService $filmListService,
-        protected FilmCreateService $filmCreateService,
-        protected FilmUpdateService $filmUpdateService,
-        protected FilmRepository $filmRepository,
+        private FilmService $filmService,
+//        protected FilmListService $filmListService,
+//        protected FilmCreateService $filmCreateService,
+//        protected FilmUpdateService $filmUpdateService,
+//        protected FilmRepository $filmRepository,
 //        protected RequestFactoryInterface $httpFactory,
 //        protected ClientInterface $httpClient
 //        private \Psr\Http\Client\ClientInterface $httpClient
@@ -38,75 +49,79 @@ class FilmController extends Controller
 
     /**
      * Получение списка фильмов.
-     *
-     * @return Success
      */
     public function index(FilmsListRequest $request)
     {
-        $perPage = $request['per_page'] ?? 8;
+        $queryParams = FilmListQueryParams::fromRequest($request);
+        $paginator = $this->filmService->getFilmsList($queryParams);
 
-        $films = Film::query()
-            ->when($request->has('genre'), function ($query) use ($request) {
-                $query->whereRelation('genres', 'name', $request->get('genre'));
-            })
-            ->when($request->has('status') && $request->user()?->isModerator(),
-                function ($query) use ($request) {
-                    $query->whereStatus($request->get('status'));
-                },
-                function ($query) {
-                    $query->whereStatus(Film::STATUS_READY);
-                }
-            )
-            ->ordered($request->get('order_by'), $request->get('order_to'));
-//            ->paginate($perPage);
+        return $this->success(new FilmListCollection($paginator));
+//
+//        $queryParams = FilmListQueryParams::fromRequest($request);
+//        $result = $this->filmService->getFilmsList($queryParams);
 
-        return $this->success(FilmListResource::collection($films->paginate($perPage)));
+//        return $this->success($result);
+//        return $this->success(FilmListResource::collection($result));
     }
 
     /**
-     * Добавление фильма в бд
-     *
-     * @param StoreFilmRequest $request
-     *
-     * @return Success
-     * @throws Throwable
+     * Создание фильма (только для модераторов)
      */
-    public function store(StoreFilmRequest $request): Success
+    public function store(StoreFilmRequest $request)
     {
-        $film = $this->filmCreateService->createFilm($request->validated());
+        try {
+            $filmData = CreateFilmData::fromRequest($request);
+            $result = $this->filmService->createFilm($filmData);
 
-        return $this->success(new FilmResource($film), Response::HTTP_CREATED);
-    }
-
-     /**
-     * Получение информации о фильме
-     *
-     * @param  \App\Models\Film  $film
-     * @return Success
-     */
-    public function show(int $id): Success
-    {
-        $film = Film::findOrFail($id);
-
-//        $data = $this->repository->getFilm('tt0031381');
-//        UpdateFilms::dispatchSync();//$film);
-
-        return $this->success(new FilmResource($film));
-//        return $this->success($film->append('rating')->loadCount('scores'));
+            return $this->success($result, 201);
+        } catch (\InvalidArgumentException $e) {
+            return $this->error($e->getMessage(), [], 422);
+        } catch (\Exception $e) {
+            return $this->error('Ошибка при создании фильма', [], 500);
+        }
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * Обновление фильма (только для модераторов)
      */
-    public function update(UpdateFilmRequest $request, int $id): Success
+    public function update(UpdateFilmRequest $request, int $id)
     {
-        $film = $this->filmUpdateService->updateFilm($id, $request->validated());
+        try {
+            $filmData = UpdateFilmData::fromRequest($request);
+            $result = $this->filmService->updateFilm($id, $filmData);
 
-        return $this->success(new FilmResource($film), Response::HTTP_OK);
+            return $this->success($result);
+        } catch (\InvalidArgumentException $e) {
+            $statusCode = $e->getCode() ?: 422;
+            return $this->error($e->getMessage(), [], $statusCode);
+        } catch (\Exception $e) {
+            return $this->error('Ошибка при обновлении фильма', [], 500);
+        }
+    }
+
+    /**
+     * Получение детальной информации о фильме.
+     */
+    public function show(int $id)
+    {
+        try {
+            $userId = auth()->id(); // Получаем ID текущего пользователя
+            $film = $this->filmService->getFilm($id, $userId);
+
+            return $this->success($film);
+        } catch (ModelNotFoundException $e) {
+            return $this->notFound();
+//            return response()->json(['message' => 'Film not found'], 404);
+        }
+//        $filmDetails = $this->filmService->getFilmDetails($id);
+//
+//        if (!$filmDetails) {
+//            return $this->notFound(); // или $this->notFound('Фильм не найден')
+//            return $this->error('Фильм не найден', 404);
+//            return $this->error('Запрашиваемая страница не существует', [], 404);
+//        }
+//
+//        return $this->success($filmDetails);
     }
 
     /**
@@ -114,14 +129,101 @@ class FilmController extends Controller
      *
      * @param Film $film
      * @return \App\Http\Responses\Success
+     *
+     * @OA\Get(
+     *     path="/api/films/{id}/similar",
+     *     summary="Get similar films",
+     *     tags={"Films"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Film ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of similar films",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Film"))
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Film not found")
+     * )
      */
-    public function similar(int $id, FilmService $service)
+    public function similar(int $id): JsonResponse
     {
-        $film = Film::findOrFail($id);
-        $films = $service->getSimilarFor($film, Film::LIST_FIELDS);
+        try {
+            $similarFilms = $this->filmService->getSimilarFilms($id);
 
-        return $this->success(FilmListResource::collection($films));
-//        return $this->success($service->getSimilarFor($film, Film::LIST_FIELDS));
+            return response()->json([
+                'data' => $similarFilms
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return $this->notFound();
+        }
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/promo",
+     *     summary="Get promo film",
+     *     tags={"Promo"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Promo film data",
+     *         @OA\JsonContent(ref="#/components/schemas/Film")
+     *     ),
+     *     @OA\Response(response=404, description="Promo film not found")
+     * )
+     */
+    public function showPromo(): Success|JsonResponse
+    {
+        $promoFilm = $this->filmService->getPromoFilm();
+
+        if (!$promoFilm) {
+            return response()->json([
+                'message' => 'Promo film not found'
+            ], 404);
+        }
+
+        return $this->success($promoFilm);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/promo/{id}",
+     *     summary="Set promo film",
+     *     tags={"Promo"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Film ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Promo film set successfully",
+     *         @OA\JsonContent(ref="#/components/schemas/Film")
+     *     ),
+     *     @OA\Response(response=404, description="Film not found"),
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=401, description="Unauthenticated")
+     * )
+     */
+    public function setPromo(SetPromoRequest $request, int $id): Success|JsonResponse
+    {
+        try {
+            $film = $this->filmService->setPromoFilm($id);
+
+            return $this->success($film);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Film not found'
+            ], 404);
+        }
     }
 
     /**
@@ -129,16 +231,16 @@ class FilmController extends Controller
      *
      * @return Success
      */
-    public function showPromo(): Success
-    {
-        $film = Film::where('promo', true)
-            ->with(['genres'])//, 'actors', 'directors'])
-            ->firstOrFail();
-
-//        $this->setFavoriteFlag($film);
-
-        return $this->success(new FilmResource($film));
-    }
+//    public function showPromo(): Success
+//    {
+//        $film = Film::where('promo', true)
+//            ->with(['genres'])//, 'actors', 'directors'])
+//            ->firstOrFail();
+//
+////        $this->setFavoriteFlag($film);
+//
+//        return $this->success(new FilmResource($film));
+//    }
 
     /**
      * Создание промо
@@ -148,17 +250,17 @@ class FilmController extends Controller
      * @return Success
      * @throws Throwable
      */
-    public function createPromo($filmId): Success
-    {
-        DB::transaction(
-            function () use ($filmId) {
-                $this->filmRepository->resetPromoFlags();
-                $this->filmRepository->setPromoFlag($filmId);
-            }
-        );
-
-        $film = $this->filmRepository->findOrFail($filmId);
-
-        return $this->success(new FilmResource($film));
-    }
+//    public function createPromo($filmId): Success
+//    {
+//        DB::transaction(
+//            function () use ($filmId) {
+//                $this->filmRepository->resetPromoFlags();
+//                $this->filmRepository->setPromoFlag($filmId);
+//            }
+//        );
+//
+//        $film = $this->filmRepository->findOrFail($filmId);
+//
+//        return $this->success(new FilmResource($film));
+//    }
 }

@@ -1,163 +1,236 @@
 <?php
+// app/Repositories/FilmRepository.php
 
 namespace App\Repositories\Films;
 
+use App\DTO\CreateFilmData;
+use App\DTO\UpdateFilmData;
 use App\Models\Film;
+use App\DTO\FilmListQueryParams;
+use App\Models\Genre;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
-/**
- * Репозиторий для фильмов
- *
- * @template TModel of Model
- */
-final class FilmRepository
+class FilmRepository
 {
-    /**
-     * Создает фильм
-     *
-     * @param  array $data
-     * @return Film
-     */
-    public function create(array $data): Film
+    public function __construct(
+        private Film $film,
+        private Genre $genre
+    ) {}
+
+    public function getFilmsList(FilmListQueryParams $params): LengthAwarePaginator
     {
-        /**
-         * @var Film $film
-         */
-        $film = Film::create($data);
-        return $film;
+        $query = $this->film->newQuery()->with('genres');
+
+        // Фильтрация по жанру
+        if ($params->genre) {
+            $query->whereHas('genres', function (Builder $q) use ($params) {
+                $q->where('name', $params->genre);
+            });
+        }
+
+        // Фильтрация по статусу
+        if ($params->status && $params->isModerator) {
+            $query->where('status', $params->status);
+        } else {
+            $query->where('status', Film::STATUS_READY);
+        }
+
+        // Поиск (если нужно)
+        if ($params->search) {
+            $query->where('name', 'like', "%{$params->search}%");
+        }
+
+        // Сортировка
+        $query->ordered($params->orderBy, $params->orderTo);
+
+        return $query->paginate($params->perPage, ['*'], 'page', $params->page);
     }
 
-    /**
-     * Обновляет данные фильма
-     *
-     * @param Film  $film
-     * @param array $data
-     *
-     * @return void
-     */
-    public function update(Film $film, array $data): void
+    // Дополнительные методы репозитория
+    public function findById(int $id): ?Film
     {
-        $film->update($data);
+        return $this->film->with(['genres', 'comments.user'])->find($id);
+    }
+
+    public function getPromoFilms(): Collection
+    {
+        return $this->film->where('promo', true)
+            ->where('status', Film::STATUS_READY)
+            ->ordered('released', 'desc')
+            ->limit(8)
+            ->get();
+    }
+
+    public function createFilm(CreateFilmData $data): Film
+    {
+        return DB::transaction(function () use ($data) {
+            $film = $this->film->create([
+                'imdb_id' => $data->imdbId,
+                'status' => Film::STATUS_PENDING,
+                'promo' => false,
+                'rating' => null, // Явно устанавливаем null
+//                'scores_count' => null,
+                'run_time' => null,
+                'released' => null,
+            ]);
+
+            return $film;
+        });
+    }
+
+    public function updateFilm(int $filmId, UpdateFilmData $data): Film
+    {
+        return DB::transaction(function () use ($filmId, $data) {
+            $film = $this->film->findOrFail($filmId);
+
+            $updateData = array_filter([
+                'name' => $data->name,
+                'poster_image' => $data->posterImage,
+                'preview_image' => $data->previewImage,
+                'background_image' => $data->backgroundImage,
+                'background_color' => $data->backgroundColor,
+                'video_link' => $data->videoLink,
+                'preview_video_link' => $data->previewVideoLink,
+                'description' => $data->description,
+                'director' => $data->director,
+                'starring' => $data->starring,
+                'run_time' => $data->runTime,
+                'released' => $data->released,
+                'imdb_id' => $data->imdbId,
+                'status' => $data->status,
+            ], fn($value) => !is_null($value));
+
+            $film->update($updateData);
+
+            // Обновляем жанры если переданы
+            if (!is_null($data->genres)) {
+                $this->syncGenres($film, $data->genres);
+            }
+
+            return $film->fresh(['genres']);
+        });
+    }
+
+    public function updateFilmFromExternal(int $filmId, array $omdbData): Film
+//    public function updateFilmFromOmdb(int $filmId, array $omdbData): Film
+    {
+        return DB::transaction(function () use ($filmId, $omdbData) {
+            $film = $this->film->findOrFail($filmId);
+
+            $film->update([
+                'name' => $omdbData['name'],
+                'released' => $omdbData['released'],
+                'description' => $omdbData['description'],
+                'run_time' => $omdbData['run_time'],
+                'director' => $omdbData['director'],
+                'starring' => $omdbData['starring'],
+                'poster_image' => $omdbData['poster_image'],
+                'status' => Film::STATUS_ON_MODERATION,
+            ]);
+
+            // Синхронизируем жанры из OMDB
+            if (!empty($omdbData['genre'])) {
+                $this->syncGenresFromNames($film, $omdbData['genre']);
+            }
+
+            return $film->fresh(['genres']);
+        });
     }
 
     /**
      * Привязывает жанры к фильму
      *
-     * @param  Film  $film
-     * @param  array $genreIds
+     * @param Film $film
+     * @param array $genreIds
      * @return void
      */
-    public function syncGenres(Film $film, array $genreIds): void
+    private function syncGenres(Film $film, array $genreIds): void
     {
         $film->genres()->sync($genreIds);
     }
 
-    /**
-     * Привязывает актёров к фильму
-     *
-     * @param  Film  $film
-     * @param  array $actorIds
-     * @return void
-     */
-    public function syncActors(Film $film, array $actorIds): void
+    private function syncGenresFromNames(Film $film, array $genreNames): void
     {
-        $film->actors()->sync($actorIds);
-    }
+        $genreIds = [];
 
-    /**
-     * Загружает связи
-     *
-     * @param  Film $film
-     * @return Film
-     */
-    public function loadRelations(Film $film): Film
-    {
-        /**
-         * @var Film $film
-         */
-        $film = $film->load('genres');//, 'starring', 'director');
-        return $film;
+        foreach ($genreNames as $genreName) {
+            $genre = $this->genre->firstOrCreate(['name' => $genreName]);
+            $genreIds[] = $genre->id;
+        }
+
+        $film->genres()->sync($genreIds);
     }
 
     /**
      * Ищет фильм по ID
      *
-     * @param int $id
-     *
-     * @return Film
+     * @param string $imdbId
+     * @return bool
      */
-    public function findOrFail(int $id): Film
+    public function findByIdOrFail(int $filmId): Film
     {
-        return Film::findOrFail($id);
+        return $this->film->findOrFail($filmId);
     }
 
-    /**
-     * Получить похожие фильмы по жанрам фильма с заданным id
-     *
-     * @param  int $filmId
-     * @param  int $limit
-     * @return Collection
-     *
-     * @psalm-return Collection<int, Film>
-     */
-    public function getSimilarFilmsByGenres(int $filmId, int $limit = 4): Collection
+    // Метод для проверки уникальности с исключением
+    public function filmExistsByImdbId(string $imdbId, ?int $excludeFilmId = null): bool
     {
-        $film = $this->findOrFail($filmId);
+        $query = $this->film->where('imdb_id', $imdbId);
 
-        /**
-         * @var Builder<Film> $query
-         */
-        /**
-         * @psalm-suppress UndefinedMagicMethod
-         */
-        $query = Film::with(['genres'])
-            ->whereHas(
-                'genres', function ($query) use ($film) {
-                $query->whereIn('genres.id', $film->genres->pluck('id'));
-            }
-            )
-            ->where('id', '!==', $film->id)
-            ->orderBy('released', 'desc')
-            ->limit($limit);
+        if ($excludeFilmId) {
+            $query->where('id', '!=', $excludeFilmId);
+        }
 
-        return $query->get();
+        return $query->exists();
     }
 
-    /**
-     * Получить текущий промо-фильм
-     *
-     * @return Film
-     */
-    public function getPromoFilm(): Film
+    public function getSimilarFilms(int $filmId, int $limit = 4): Collection
     {
-        /**
-         * @var Film $film
-         */
-        $film = Film::where('promo', true)
-            ->with(['genres', 'actors', 'directors'])
-            ->firstOrFail();
+        // Получаем текущий фильм и его жанры
+        $film = $this->film->with('genres')->findOrFail($filmId);
+        $genreIds = $film->genres->pluck('id')->toArray();
 
-        return $film;
+        if (empty($genreIds)) {
+            return collect();
+        }
+
+        // Ищем фильмы с такими же жанрами, исключая текущий
+        return $this->film
+            ->where('id', '!=', $filmId)
+            ->whereHas('genres', function ($query) use ($genreIds) {
+                $query->whereIn('genres.id', $genreIds);
+            })
+            ->with(['genres'])
+            ->limit($limit)
+            ->get();
     }
 
-    /**
-     * Сбросить флаг promo у всех фильмов
-     */
-    public function resetPromoFlags(): void
+    public function filmExists(int $filmId): bool
     {
-        Film::where('promo', true)->update(['promo' => false]);
+        return $this->film->where('id', $filmId)->exists();
     }
 
-    /**
-     * Установить флаг promo для фильма по ID
-     *
-     * @param int $filmId
-     * Количество обновленных записей (должно быть 1)
-     */
-    public function setPromoFlag(int $filmId): void
+    public function getPromoFilm(): ?Film
     {
-        Film::where('id', $filmId)->update(['promo' => true]);
+        return $this->film
+            ->where('promo', true)
+            ->with(['genres'])
+            ->first();
     }
+
+    public function setPromoFilm(int $filmId): Film
+    {
+        // Сбрасываем все промо-флаги
+        $this->film->where('promo', true)->update(['promo' => false]);
+
+        // Устанавливаем новый промо-фильм
+        $film = $this->film->findOrFail($filmId);
+        $film->update(['promo' => true]);
+
+        return $film->fresh(['genres']);
+    }
+
 }
