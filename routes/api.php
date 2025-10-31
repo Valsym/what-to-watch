@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
 // Аутентификация
 Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
 Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
@@ -30,16 +31,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/user', [UserController::class, 'update'])->name('user.update');
 //    Route::get('/user', [UserController::class, 'index'])->name('user.index');
 });
-
-//Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
-//Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
-//Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
-//
-//Route::prefix('/user')->middleware('auth:sanctum')->group(function () {
-//    Route::get('/', [UserController::class, 'index'])->name('user.index');
-//    Route::get('/{user}', [UserController::class, 'show'])->name('user.show');
-//    Route::/*middleware('is_moderator')->*/patch('/', [UserController::class, 'update'])->name('user.update');
-//});
 
 Route::get('/films/{film}/similar', [FilmController::class, 'similar'])->name('films.similar');
 
@@ -69,23 +60,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 });
 
-//Route::get('films/{film}/comments', [CommentController::class, 'index'])->name('comments.index');
-//Route::middleware('auth:sanctum')->group(function () {
-//    Route::post('films/{film}/comments', [CommentController::class, 'store'])->name('comments.store');
-//    Route::patch('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
-//});
-//Route::middleware('auth:sanctum')->delete('/comments/{comment}', [CommentController::class, 'destroy'])
-//    ->name('comments.destroy');
-
 // Промо-фильмы
 Route::get('/promo', [FilmController::class, 'showPromo'])->name('promo.show');
 Route::post('/promo/{id}', [FilmController::class, 'setPromo'])
     ->middleware('auth:sanctum')
     ->name('promo.create');
 
-//Route::prefix('/promo')->group(function () {
-//    Route::get('/', [FilmController::class, 'showPromo'])->name('promo.show');
-//    Route::post('/promo/{id}', [FilmController::class, 'createPromo'])->
-//        middleware('auth:sanctum', 'is_moderator')->
-//        name('promo.create');
-//});
+// Для теста schedule:run
+Route::get('/force-schedule', function () {
+    \Illuminate\Support\Facades\Artisan::call('schedule:run');
+    return response()->json([
+        'output' => \Illuminate\Support\Facades\Artisan::output()
+    ]);
+});

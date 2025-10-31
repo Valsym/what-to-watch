@@ -27,6 +27,9 @@ use App\Repositories\Comments\CommentRepository;
 use App\Services\Comments\CommentService;
 use App\Contracts\ExternalFilmRepositoryInterface;
 use App\Services\External\OmdbFilmRepository;
+use App\Contracts\ExternalCommentRepositoryInterface;
+use App\Services\External\ExternalCommentRepository;
+use App\Services\Comments\ExternalCommentService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -112,6 +115,17 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(FilmRepository::class),
                 $app->make(ExternalFilmRepositoryInterface::class), // Используем интерфейс
                 $app->make(FavoriteRepository::class)
+            );
+        });
+
+        // Внешние комментарии
+        $this->app->bind(ExternalCommentRepositoryInterface::class,
+            ExternalCommentRepository::class);
+
+        $this->app->bind(ExternalCommentService::class, function ($app) {
+            return new ExternalCommentService(
+                $app->make(ExternalCommentRepositoryInterface::class),
+                $app->make(CommentRepository::class)
             );
         });
 

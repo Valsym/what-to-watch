@@ -36,16 +36,15 @@ return [
     ],
 
     'omdb' => [
+        'api_key' => env('OMDB_API_KEY'),
+        'base_url' => env('OMDB_BASE_URL', 'http://www.omdbapi.com/'),
+
         'films' => [
             'url' => env('EXT_API_FILMS', 'http://academy.localhost/api/films/'),
             'api_key' => env('OMDB_API_KEY'),
         ],
         'comments' => [
             'url' => env('EXT_API_COMMENTS', 'http://academy.localhost/api/comments/')
-        ],
-        [
-            'api_key' => env('OMDB_API_KEY'),
-            'base_url' => env('OMDB_BASE_URL', 'http://www.omdbapi.com/'),
         ],
     ],
 
@@ -56,6 +55,12 @@ return [
             // В будущем можно добавить другие источники:
             // 'tmdb' => \App\Services\External\TmdbFilmRepository::class,
         ],
+    ],
+
+    'external_comments' => [
+        'base_url' => 'http://www.omdbapi.com/',//env('EXTERNAL_COMMENTS_BASE_URL'),
+        'api_key' => env('OMDB_API_KEY'),//env('EXTERNAL_COMMENTS_API_KEY', ),
+        'rate_limit' => env('EXTERNAL_COMMENTS_RATE_LIMIT', 10), // запросов в минуту
     ],
 
 ];

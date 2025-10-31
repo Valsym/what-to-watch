@@ -5,7 +5,37 @@ use Illuminate\Support\Facades\Artisan;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schedule;
-use App\Jobs\UpdateFilms;
+
+Schedule::call(function () {
+    \Illuminate\Support\Facades\Log::info('CONSOLE.PHP SCHEDULER WORKS! ' . now());
+})->everyMinute();
+
+Schedule::command('test:scheduler')
+    ->everyMinute()
+    ->name('test-scheduler-command');
+
+// Добавим задачу для синхронизации комментариев
+Schedule::job(new \App\Jobs\SyncExternalCommentsJob())
+    ->dailyAt('03:00')
+    ->timezone('Europe/Moscow')
+    ->name('sync-external-comments');
+
+// Для локального окружения - каждый час для тестирования
+if (app()->environment('local')) {
+    Schedule::job(new \App\Jobs\SyncExternalCommentsJob())
+        ->hourly()
+        ->withoutOverlapping()
+        ->name('sync-external-comments-local');
+}
+
+//// Добавим задачу напрямую здесь
+//Schedule::call(function () {
+//    \Illuminate\Support\Facades\Log::info('CONSOLE.PHP SCHEDULER WORKS! ' . now());
+//})->everyMinute();
+//
+//Schedule::command('test:scheduler')
+//    ->everyMinute()
+//    ->name('test-from-console');
 
 //Schedule::call(function () {
 ////    DB::table('recent_users')->delete();

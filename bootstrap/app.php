@@ -15,8 +15,6 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Carbon;
 
-//private $check_file = "files/check-all.txt";
-
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -47,9 +45,9 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
 
-    ->withSchedule(function (Schedule $schedule) {
-        $schedule->call(UpdateFilms::class)->everyMinute();
-    })
+//    ->withSchedule(function (Schedule $schedule) {
+//        $schedule->call(UpdateFilms::class)->everyMinute();
+//    })
 
 //    ->withSchedule(function (Schedule $schedule) {
 ////        $film = Film::where('id', 1);//->first();
@@ -66,5 +64,8 @@ return Application::configure(basePath: dirname(__DIR__))
 //            });
 ////            ->appendOutputTo("files/check-all.txt");
 //    })
-
     ->create();
+
+
+
+

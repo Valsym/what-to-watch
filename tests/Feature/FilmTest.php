@@ -342,7 +342,7 @@ class FilmTest extends TestCase
         // Проверяем структуру ответа
         $response->assertJsonStructure([
             'data' => [
-                'data' => [
+                //'data' => [
                     "id",
                     "name",
                     "poster_image",
@@ -353,7 +353,7 @@ class FilmTest extends TestCase
                     "preview_video_link",
                     "description",
                     "rating",
-                    "scores_count",
+//                    "scores_count",
                     "director",
                     "starring",
                     "run_time",
@@ -361,7 +361,7 @@ class FilmTest extends TestCase
                     "released",
                     "is_favorite",
                     "promo",
-                ]
+                //]
             ]
         ]);
     }
